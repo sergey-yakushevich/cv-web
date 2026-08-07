@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #333333;
+    --card: #ffffff;
+    --card-foreground: #333333;
+    --popover: #ffffff;
+    --popover-foreground: #333333;
+    --primary: #3280ff;
+    --primary-foreground: #ffffff;
+    --secondary: #f2f4f7;
+    --secondary-foreground: #465468;
+    --muted: #f9fafb;
+    --muted-foreground: #677184;
+    --accent: #dff2ff;
+    --accent-foreground: #0830a0;
+    --destructive: #ff3434;
+    --destructive-foreground: #ffffff;
+    --border: #e4e7ec;
+    --input: #e4e7ec;
+    --ring: #3280ff;
+    --chart-1: #3280ff;
+    --chart-2: #115cff;
+    --chart-3: #0040f5;
+    --chart-4: #0131cc;
+    --chart-5: #0830a0;
+    --sidebar: #f9fafb;
+    --sidebar-foreground: #333333;
+    --sidebar-primary: #3280ff;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #dff2ff;
+    --sidebar-accent-foreground: #0830a0;
+    --sidebar-border: #e4e7ec;
+    --sidebar-ring: #3280ff;
+    --font-sans: Inter, sans-serif;
+    --font-serif: Serif, serif;
+    --font-mono: JetBrains Mono, monospace;
+    --radius: 0.375rem;
+    --shadow-x: 0;
+    --shadow-y: 1px;
+    --shadow-blur: 3px;
+    --shadow-spread: 0px;
+    --shadow-opacity: 0.1;
+    --shadow-color: oklch(0 0 0);
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
+  }
+
+  .dark {
+    --background: #171717;
+    --foreground: #e5e5e5;
+    --card: #262626;
+    --card-foreground: #e5e5e5;
+    --popover: #262626;
+    --popover-foreground: #e5e5e5;
+    --primary: #3280ff;
+    --primary-foreground: #ffffff;
+    --secondary: #262626;
+    --secondary-foreground: #e5e5e5;
+    --muted: #1f1f1f;
+    --muted-foreground: #a3a3a3;
+    --accent: #0830a0;
+    --accent-foreground: #bedbff;
+    --destructive: #ff3434;
+    --destructive-foreground: #ffffff;
+    --border: #404040;
+    --input: #404040;
+    --ring: #3280ff;
+    --chart-1: #5ba4ff;
+    --chart-2: #3280ff;
+    --chart-3: #115cff;
+    --chart-4: #0040f5;
+    --chart-5: #0131cc;
+    --sidebar: #171717;
+    --sidebar-foreground: #e5e5e5;
+    --sidebar-primary: #3280ff;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #0830a0;
+    --sidebar-accent-foreground: #bedbff;
+    --sidebar-border: #404040;
+    --sidebar-ring: #3280ff;
+    --font-sans: Inter, sans-serif;
+    --font-serif: Source Serif 4, serif;
+    --font-mono: JetBrains Mono, monospace;
+    --radius: 0.375rem;
+    --shadow-x: 0;
+    --shadow-y: 1px;
+    --shadow-blur: 3px;
+    --shadow-spread: 0px;
+    --shadow-opacity: 0.1;
+    --shadow-color: oklch(0 0 0);
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  }
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter/Inter-VariableFont_opsz,wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Serif";
+  src: url("/fonts/Source_Serif_4/SourceSerif4-VariableFont_opsz,wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+.print-force-new-page {
+  page-break-before: always;
+}
