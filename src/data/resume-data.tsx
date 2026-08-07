@@ -96,7 +96,6 @@ export const RESUME_DATA: ResumeData = {
         "Owned end-to-end Visa installment integration across backend and frontend, expanding checkout capabilities and increasing real-world payment flexibility.",
         "Implemented PCI-DSS compliant card tokenization, strengthening secure API interactions with payment gateways.",
         "Evaluated audit logging design options and built a high-performance tracing system for merchant and internal actions, improving accountability in a complex production environment.",
-        "Identified payment state-machine edge cases early and shipped reliability fixes before customer impact, raising production stability without waiting for requests.",
       ],
     },
     {
