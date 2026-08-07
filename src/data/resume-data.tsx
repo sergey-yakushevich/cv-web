@@ -83,7 +83,6 @@ export const RESUME_DATA: ResumeData = {
         "Ruby on Rails",
         "PostgreSQL",
         "PCI-DSS",
-        "3DS",
         "Visa",
         "Card Tokenization",
         "React",
@@ -95,7 +94,7 @@ export const RESUME_DATA: ResumeData = {
       end: "Jan 2026",
       description: [
         "Owned end-to-end Visa installment integration across backend and frontend, expanding checkout capabilities and increasing real-world payment flexibility.",
-        "Implemented PCI-DSS compliant card tokenization and 3DS authentication flows, strengthening secure API interactions with payment gateways.",
+        "Implemented PCI-DSS compliant card tokenization, strengthening secure API interactions with payment gateways.",
         "Evaluated audit logging design options and built a high-performance tracing system for merchant and internal actions, improving accountability in a complex production environment.",
         "Identified payment state-machine edge cases early and shipped reliability fixes before customer impact, raising production stability without waiting for requests.",
       ],
@@ -106,7 +105,6 @@ export const RESUME_DATA: ResumeData = {
       badges: [
         "Ruby on Rails",
         "PostgreSQL",
-        "Architecture",
         "AWS",
         "Docker",
         "Kubernetes",
@@ -141,7 +139,7 @@ export const RESUME_DATA: ResumeData = {
       start: "Jan 2018",
       end: "Jun 2020",
       description: [
-        "Led migration of the primary search workload from MySQL to Elasticsearch, improving search performance by 90% for 50M+ users.",
+        "Migrated the primary search workload from MySQL to Elasticsearch, improving search performance by 90% for 50M+ users.",
         "Evaluated service communication tradeoffs and implemented Kafka to strengthen reliability in an event-driven microservices environment.",
         "Built API endpoints for a large API surface and optimized test pipelines 5x to accelerate release cycles.",
       ],
@@ -166,7 +164,6 @@ export const RESUME_DATA: ResumeData = {
     "AWS (EC2, RDS, S3, Lambda)",
     "Docker",
     "Kubernetes",
-    "Terraform",
     "CI/CD pipelines (GitHub Actions)",
     "RSpec",
     "Minitest",
