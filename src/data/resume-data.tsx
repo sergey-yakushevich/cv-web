@@ -153,6 +153,7 @@ export const RESUME_DATA: ResumeData = {
     "Node.js",
     "React",
     "Next.js",
+    "Go",
     "GraphQL",
     "PostgreSQL",
     "MySQL",
