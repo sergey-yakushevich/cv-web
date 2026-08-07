@@ -7,10 +7,10 @@ export const RESUME_DATA: ResumeData = {
   location: "Georgia, Batumi",
   locationLink: "https://www.google.com/maps/place/Georgia",
   about:
-    "Senior Ruby on Rails engineer with 8 years of experience owning enterprise SaaS integrations, complex API workflows, and production reliability.",
+    "Senior Ruby on Rails engineer with 9 years of experience owning enterprise SaaS integrations, complex API workflows, and production reliability.",
   summary: (
     <>
-      Senior Ruby on Rails engineer with 8 years of experience building and
+      Senior Ruby on Rails engineer with 9 years of experience building and
       evolving enterprise-grade SaaS systems with complex business logic and
       large API surfaces. I lead high-impact initiatives end-to-end across
       event-driven architectures, payment and banking integrations, and
@@ -52,30 +52,6 @@ export const RESUME_DATA: ResumeData = {
     },
   ],
   work: [
-    {
-      company: "Moyasar",
-      link: "https://moyasar.com",
-      badges: [
-        "Ruby on Rails",
-        "PostgreSQL",
-        "Elasticsearch",
-        "Microservices",
-        "Payments",
-        "Fraud Detection",
-        "Identity Verification",
-        "Monitoring & Alerting",
-      ],
-      title: "Senior Ruby on Rails Engineer",
-      start: "Dec 2025",
-      end: "Aug 2026",
-      description: [
-        "Worked on payment processing at scale across 10+ microservices handling 350M+ payments.",
-        "Built identity verification to meet Saudi regulatory requirements, enabling compliant merchant onboarding.",
-        "Developed the fraud system that blocks transactions on risk signals, reducing exposure to fraudulent payments.",
-        "Implemented alerting that surfaces payment flow disruptions early, shortening time to detection for production incidents.",
-        "Acted as technical specialist on sales calls, translating platform capabilities for prospective merchants.",
-      ],
-    },
     {
       company: "Mondido",
       link: "https://mondido.com",
@@ -138,7 +114,7 @@ export const RESUME_DATA: ResumeData = {
         "CI/CD",
       ],
       title: "Software Engineer",
-      start: "Jan 2018",
+      start: "Jan 2016",
       end: "Jun 2020",
       description: [
         "Led migration of the primary search workload from MySQL to Elasticsearch, improving search performance by 90% for 50M+ users.",
@@ -183,29 +159,8 @@ export const RESUME_DATA: ResumeData = {
     "Payment Gateway Integration",
     "Visa Installments",
     "Audit Logging",
-    "Fraud Detection",
-    "Identity Verification (KYC)",
-    "Monitoring & Alerting",
   ],
   projects: [
-    {
-      title: "Moyasar",
-      techStack: [
-        "Ruby on Rails",
-        "PostgreSQL",
-        "Elasticsearch",
-        "Microservices",
-        "Fraud Detection",
-        "Identity Verification",
-        "Monitoring & Alerting",
-      ],
-      description:
-        "Payments platform processing 350M+ payments across 10+ microservices. Built regulatory-compliant identity verification for the Saudi market, a risk-signal fraud blocking system, and alerting for payment flow disruptions.",
-      link: {
-        label: "moyasar.com",
-        href: "https://moyasar.com",
-      },
-    },
     {
       title: "Mondido",
       techStack: [
