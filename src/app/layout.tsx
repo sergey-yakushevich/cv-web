@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import type React from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { VisitTracker } from "@/components/visit-tracker";
 
 /*
  * Site-wide defaults only.
@@ -56,6 +57,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ErrorBoundary>{children}</ErrorBoundary>
+        <VisitTracker />
       </body>
     </html>
   );

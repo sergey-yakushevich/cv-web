@@ -37,7 +37,12 @@ registry:
     - KAMAL_REGISTRY_PASSWORD
 
 env:
+  secret:
+    - TRACKHUB_TOKEN
   clear:
+    # Central visitor-tracking API on the internal docker network.
+    TRACKHUB_URL: http://tracker:8080
+    TRACKHUB_SITE: buildcv.cc
     NODE_ENV: production
     # Read by src/lib/pdf/browser.ts. The Dockerfile installs Alpine Chromium
     # at this path for the PDF route.

@@ -14,6 +14,9 @@ importers:
       '@as-integrations/next':
         specifier: ^3.0.0
         version: 3.2.0(@apollo/server@4.12.2(graphql@16.11.0))(next@14.2.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
+      '@fingerprintjs/fingerprintjs':
+        specifier: ^5.2.0
+        version: 5.2.0
       '@radix-ui/react-avatar':
         specifier: ^1.0.4
         version: 1.1.10(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -68,6 +71,9 @@ importers:
       next:
         specifier: 14.2.1
         version: 14.2.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      puppeteer-core:
+        specifier: ^24
+        version: 24.43.1
       react:
         specifier: ^18
         version: 18.3.1
@@ -123,9 +129,6 @@ importers:
       postcss:
         specifier: ^8
         version: 8.5.6
-      puppeteer-core:
-        specifier: ^24
-        version: 24.43.1
       tailwindcss:
         specifier: ^3.4.0
         version: 3.4.17
@@ -285,6 +288,9 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
+
+  '@fingerprintjs/fingerprintjs@5.2.0':
+    resolution: {integrity: sha512-j+2nInkwCQNTJcNhOjvkGM/nLRTuGJTC6xai4quqvUpjob2ssrGwBZjS7k55nOmKvge7qvJT2nS3i/IRvQSTQA==}
 
   '@floating-ui/core@1.8.0':
     resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
@@ -2733,6 +2739,8 @@ snapshots:
 
   '@biomejs/cli-win32-x64@2.0.6':
     optional: true
+
+  '@fingerprintjs/fingerprintjs@5.2.0': {}
 
   '@floating-ui/core@1.8.0':
     dependencies:
