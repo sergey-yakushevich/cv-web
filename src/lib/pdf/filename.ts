@@ -9,18 +9,23 @@ function sanitise(value: string): string {
 }
 
 /**
- * The name a recruiter sees in their inbox, so it leads with the person and
- * not with a URL slug.
+ * The name a recruiter sees in their inbox: the person, an em dash, then the
+ * role the CV is aimed at.
  *
- *   default      -> "Sergey Yakushevich - CV.pdf"
- *   other        -> "Sergey Yakushevich - CV (Go ATS).pdf"
+ *   "Sergey Yakushevich — Senior Backend Engineer (Go, Ruby).pdf"
  *
- * The tag comes from the last segment of the variant label, which is the part
- * that says what makes that version different. New variants get a sensible
- * name with no extra wiring.
+ * A version with no headline falls back to the older scheme, which tags the
+ * variant so the files stay distinct. That matters for `pnpm cv:pdf`: two
+ * versions resolving to the same name would silently overwrite each other in
+ * generated-cvs/.
  */
 export function resumePdfFileName(variant: ResumeVariant): string {
   const name = sanitise(variant.data.name);
+  const headline = sanitise(variant.data.headline ?? "");
+
+  if (headline) {
+    return `${name} — ${headline}.pdf`;
+  }
 
   if (variant.slug === DEFAULT_VARIANT.slug) {
     return `${name} - CV.pdf`;

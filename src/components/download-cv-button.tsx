@@ -9,6 +9,27 @@ import { cn } from "@/lib/utils";
 type DownloadState = "idle" | "working" | "failed";
 
 /**
+ * Pulls the filename out of a Content-Disposition header.
+ *
+ * `filename*` has to win. Setting `anchor.download` bypasses the browser's own
+ * header parsing, so reading the plain `filename` would save the ASCII fallback
+ * — and that fallback replaces every non-ASCII character with an underscore,
+ * turning the em dash in "Name — Role.pdf" into "Name _ Role.pdf".
+ */
+function fileNameFromDisposition(disposition: string): string {
+  const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded[1]);
+    } catch {
+      // Malformed percent-encoding: fall through to the ASCII form.
+    }
+  }
+
+  return disposition.match(/filename="([^"]+)"/)?.[1] ?? "resume.pdf";
+}
+
+/**
  * Fetches the rendered PDF for one CV version and saves it.
  *
  * Shared by the toolbar button and the command menu so there is one copy of
@@ -34,13 +55,12 @@ export function useCvDownload(slug: string | undefined) {
 
       // The server names the file; read it back rather than guessing here.
       const disposition = response.headers.get("Content-Disposition") ?? "";
-      const match = disposition.match(/filename="([^"]+)"/);
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
 
       const anchor = document.createElement("a");
       anchor.href = objectUrl;
-      anchor.download = match?.[1] ?? "resume.pdf";
+      anchor.download = fileNameFromDisposition(disposition);
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();

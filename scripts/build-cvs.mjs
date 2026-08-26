@@ -56,7 +56,12 @@ async function main() {
     }
 
     const disposition = response.headers.get("Content-Disposition") ?? "";
-    const fileName = disposition.match(/filename="([^"]+)"/)?.[1] ?? `${slug}.pdf`;
+    // filename* first: the plain filename is an ASCII fallback that replaces
+    // non-ASCII characters, so it would write "Name _ Role.pdf" for an em dash.
+    const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    const fileName = encoded
+      ? decodeURIComponent(encoded[1])
+      : (disposition.match(/filename="([^"]+)"/)?.[1] ?? `${slug}.pdf`);
     const bytes = Buffer.from(await response.arrayBuffer());
 
     await writeFile(join(outDir, fileName), bytes);
