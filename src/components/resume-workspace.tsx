@@ -45,6 +45,9 @@ export function ResumeWorkspace({
   resumes,
   currentSlug,
 }: ResumeWorkspaceProps) {
+  const currentLabel =
+    resumes.find((entry) => entry.slug === currentSlug)?.label ?? currentSlug;
+
   const tabs: AnimatedTabItem[] = [
     {
       value: "cv",
@@ -54,13 +57,14 @@ export function ResumeWorkspace({
     },
     {
       value: "json",
-      label: "JSON",
+      label: "Edit",
       icon: Braces,
       content: (
         <ResumeJsonPanel
           key={`${currentSlug}:${json}`}
           initialJson={json}
           currentSlug={currentSlug}
+          label={currentLabel}
         />
       ),
     },

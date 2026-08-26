@@ -15,6 +15,16 @@ interface ResumeJsonPanelProps {
   /** The CV as JSON, exactly as the server rendered it. */
   initialJson: string;
   currentSlug: string;
+  /** Which CV is being edited, shown in the header. */
+  label: string;
+}
+
+const NAME_LIMIT = 20;
+
+function truncate(value: string): string {
+  return value.length > NAME_LIMIT
+    ? `${value.slice(0, NAME_LIMIT).trimEnd()}…`
+    : value;
 }
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -32,6 +42,7 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 export function ResumeJsonPanel({
   initialJson,
   currentSlug,
+  label,
 }: ResumeJsonPanelProps) {
   const router = useRouter();
   const [json, setJson] = useState(initialJson);
@@ -199,20 +210,28 @@ export function ResumeJsonPanel({
           )}
         </div>
 
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          onClick={copy}
-          aria-label="Copy JSON"
-          className="size-8 shrink-0"
-        >
-          {copied ? (
-            <Check className="size-3.5 text-teal-500" />
-          ) : (
-            <Copy className="size-3.5" />
-          )}
-        </Button>
+        <div className="flex shrink-0 items-center gap-1">
+          <span
+            title={label}
+            className="truncate text-xs font-medium text-muted-foreground"
+          >
+            {truncate(label)}
+          </span>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={copy}
+            aria-label="Copy JSON"
+            className="size-8 shrink-0"
+          >
+            {copied ? (
+              <Check className="size-3.5 text-teal-500" />
+            ) : (
+              <Copy className="size-3.5" />
+            )}
+          </Button>
+        </div>
       </div>
 
       <JsonEditor value={json} onChange={setJson} maxHeight={720} />

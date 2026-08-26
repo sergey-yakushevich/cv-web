@@ -33,7 +33,7 @@ export function ResumeList({ resumes, currentSlug }: ResumeListProps) {
               onClick={() => router.push(`/${resume.slug}`)}
               aria-current={isCurrent ? "page" : undefined}
               className={cn(
-                "group flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors",
+                "group flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition-colors",
                 isCurrent
                   ? "border-foreground/20 bg-muted/60"
                   : "border-border bg-card hover:bg-muted/40"
@@ -45,10 +45,7 @@ export function ResumeList({ resumes, currentSlug }: ResumeListProps) {
                     {resume.label}
                   </span>
                   {isCurrent && (
-                    <Badge
-                      variant="outline"
-                      className="gap-1 border-accent-foreground/20 bg-accent text-accent-foreground"
-                    >
+                    <Badge variant="outline" className="gap-1">
                       <Check className="size-3" />
                       Open
                     </Badge>
@@ -61,7 +58,7 @@ export function ResumeList({ resumes, currentSlug }: ResumeListProps) {
                   {resume.note}
                 </p>
               </div>
-              <ChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
             </button>
           </li>
         );

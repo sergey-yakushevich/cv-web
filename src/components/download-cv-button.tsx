@@ -1,9 +1,10 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Check, Download, Loader2 } from "lucide-react";
 import * as React from "react";
-import { MultiStateSendButton } from "@/components/shadcn-space/button/button-30";
+import { Button } from "@/components/ui/button";
 import { fireConfettiFrom } from "@/components/ui/confetti-button";
+import { cn } from "@/lib/utils";
 
 type DownloadState = "idle" | "working" | "failed";
 
@@ -68,13 +69,12 @@ interface DownloadCvButtonProps {
 const SUCCESS_HOLD_MS = 3000;
 
 /**
- * Toolbar download button, in three states: Download, Preparing, Done!
+ * Toolbar download button, in three states: Download, Preparing…, Done!
  *
- * The button is driven by the real request rather than by its own timer, so
- * "Preparing" lasts exactly as long as the server takes to render the PDF. The
- * confetti fires when the file has actually arrived, then the button returns to
- * idle. A failed download drops straight back to idle with the reason in the
- * tooltip, because there is nothing to celebrate.
+ * The state follows the real request, so "Preparing…" lasts exactly as long as
+ * the server takes to render the PDF. The confetti fires when the file has
+ * actually arrived, then the button returns to idle. A failed download never
+ * reaches "Done!" — there is nothing to celebrate.
  */
 export function DownloadCvButton({ slug }: DownloadCvButtonProps) {
   const { state, download, reset } = useCvDownload(slug);
@@ -96,25 +96,42 @@ export function DownloadCvButton({ slug }: DownloadCvButtonProps) {
     return () => clearTimeout(timer);
   }, [state, reset]);
 
-  const status =
-    state === "working" ? "loading" : celebrating ? "success" : "idle";
+  const isWorking = state === "working";
 
   return (
-    <MultiStateSendButton
+    <Button
       ref={buttonRef}
-      status={status}
-      onSend={run}
-      idleIcon={Download}
-      idleLabel={state === "failed" ? "Failed" : "Download"}
-      loadingLabel="Preparing…"
-      successLabel="Done!"
+      type="button"
+      variant="outline"
+      onClick={run}
+      disabled={isWorking}
       aria-label="Download this CV as a PDF"
       title={
         state === "failed"
           ? "Download failed. Press CMD+J and choose Print instead."
           : "Download this CV as a PDF"
       }
-      className="h-11 min-w-0 shrink-0 rounded-2xl px-3.5 py-0"
-    />
+      className={cn(
+        "h-11 shrink-0 gap-1.5 rounded-2xl border-border bg-muted/40 px-3.5 text-sm font-medium shadow-none hover:bg-muted",
+        isWorking && "text-muted-foreground"
+      )}
+    >
+      {isWorking ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : celebrating ? (
+        <Check className="size-4 stroke-[2.5]" />
+      ) : (
+        <Download className="size-4" />
+      )}
+      <span>
+        {isWorking
+          ? "Preparing…"
+          : celebrating
+            ? "Done!"
+            : state === "failed"
+              ? "Failed"
+              : "Download"}
+      </span>
+    </Button>
   );
 }
