@@ -19,7 +19,7 @@ interface ResumeJsonPanelProps {
   label: string;
 }
 
-const NAME_LIMIT = 20;
+const NAME_LIMIT = 50;
 
 function truncate(value: string): string {
   return value.length > NAME_LIMIT
@@ -132,8 +132,8 @@ export function ResumeJsonPanel({
 
   return (
     <div className="overflow-hidden rounded-lg border">
-      <div className="flex h-12 items-center justify-between gap-2 border-b bg-muted/50 px-3">
-        <div className="flex items-center gap-2">
+      <div className="flex h-12 items-center gap-2 border-b bg-muted/50 px-3">
+        <div className="flex min-w-0 shrink items-center gap-2">
           <Button
             type="button"
             size="sm"
@@ -210,28 +210,29 @@ export function ResumeJsonPanel({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-1">
-          <span
-            title={label}
-            className="truncate text-xs font-medium text-muted-foreground"
-          >
-            {truncate(label)}
-          </span>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            onClick={copy}
-            aria-label="Copy JSON"
-            className="size-8 shrink-0"
-          >
-            {copied ? (
-              <Check className="size-3.5 text-teal-500" />
-            ) : (
-              <Copy className="size-3.5" />
-            )}
-          </Button>
-        </div>
+        {/* flex-1 puts the name in the middle of whatever space the two
+            button groups leave, so it stays centred as they change width. */}
+        <span
+          title={label}
+          className="min-w-0 flex-1 truncate text-center text-xs font-medium text-muted-foreground"
+        >
+          {truncate(label)}
+        </span>
+
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={copy}
+          aria-label="Copy JSON"
+          className="size-8 shrink-0"
+        >
+          {copied ? (
+            <Check className="size-3.5 text-teal-500" />
+          ) : (
+            <Copy className="size-3.5" />
+          )}
+        </Button>
       </div>
 
       <JsonEditor value={json} onChange={setJson} maxHeight={720} />
