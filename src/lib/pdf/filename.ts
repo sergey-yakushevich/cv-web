@@ -1,4 +1,8 @@
-import { DEFAULT_VARIANT, type ResumeVariant } from "@/data/resumes";
+import {
+  DEFAULT_VARIANT,
+  RESUME_VARIANTS,
+  type ResumeVariant,
+} from "@/data/resumes";
 
 /** Strip anything a filesystem or a Content-Disposition header would choke on. */
 function sanitise(value: string): string {
@@ -14,27 +18,41 @@ function sanitise(value: string): string {
  *
  *   "Sergey Yakushevich — Senior Backend Engineer (Go, Ruby).pdf"
  *
- * A version with no headline falls back to the older scheme, which tags the
- * variant so the files stay distinct. That matters for `pnpm cv:pdf`: two
- * versions resolving to the same name would silently overwrite each other in
- * generated-cvs/.
+ * Two versions can legitimately share a headline. They must not share a
+ * filename: `pnpm cv:pdf` writes them all into generated-cvs/, so a duplicate
+ * would silently overwrite the other. A shared headline therefore gets the
+ * variant tag appended.
  */
 export function resumePdfFileName(variant: ResumeVariant): string {
   const name = sanitise(variant.data.name);
   const headline = sanitise(variant.data.headline ?? "");
 
   if (headline) {
-    return `${name} — ${headline}.pdf`;
+    const shared = RESUME_VARIANTS.some(
+      (other) =>
+        other.slug !== variant.slug &&
+        sanitise(other.data.headline ?? "") === headline
+    );
+
+    return shared
+      ? `${name} — ${headline} (${variantTag(variant)}).pdf`
+      : `${name} — ${headline}.pdf`;
   }
 
+  // headline is required, so this is only reached if a file is hand-edited to
+  // an empty one. Keep the versions distinguishable rather than colliding.
   if (variant.slug === DEFAULT_VARIANT.slug) {
     return `${name} - CV.pdf`;
   }
 
-  const lastSegment = variant.label.split("/").pop() ?? variant.slug;
-  const tag = sanitise(lastSegment.replace(/[()]/g, ""));
+  return `${name} - CV (${variantTag(variant)}).pdf`;
+}
 
-  return tag ? `${name} - CV (${tag}).pdf` : `${name} - CV.pdf`;
+/** The last segment of the label — the part that says what this version is. */
+function variantTag(variant: ResumeVariant): string {
+  const lastSegment = variant.label.split("/").pop() ?? variant.slug;
+
+  return sanitise(lastSegment.replace(/[()]/g, "")) || variant.slug;
 }
 
 /**

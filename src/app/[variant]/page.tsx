@@ -21,7 +21,7 @@ export function generateMetadata({ params }: PageProps): Metadata {
   }
 
   const { data } = variant;
-  const title = `${data.name} - Resume (${variant.label})`;
+  const title = data.headline;
 
   return {
     title,

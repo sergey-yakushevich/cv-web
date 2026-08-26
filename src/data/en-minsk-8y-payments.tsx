@@ -6,6 +6,8 @@ export const RESUME_DATA: ResumeData = {
   initials: "SY",
   location: "Minsk, Belarus",
   locationLink: "https://www.google.com/maps/place/Minsk,+Belarus",
+  headline: "Senior Ruby on Rails Engineer",
+
   about:
     "Senior Ruby on Rails engineer with 8 years of experience owning enterprise SaaS integrations, complex API workflows, and production reliability. Writing Go (Golang) now as well.",
   summary: (

@@ -41,6 +41,7 @@ export function validateResume(input: unknown): string[] {
     "name",
     "initials",
     "location",
+    "headline",
     "about",
     "summary",
   ];

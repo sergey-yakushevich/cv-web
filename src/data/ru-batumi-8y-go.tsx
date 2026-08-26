@@ -7,6 +7,8 @@ export const RESUME_DATA: ResumeData = {
   location: "Батуми, Грузия",
   locationLink: "https://www.google.com/maps/place/Batumi,+Georgia",
 
+  headline: "Senior Backend Engineer (Go, Ruby)",
+
   about:
     "Senior Backend Engineer (Go, Ruby). 8 лет в бэкенде платёжных систем, сейчас пишу на Golang. Kafka, PostgreSQL, AWS, PCI-DSS.",
 

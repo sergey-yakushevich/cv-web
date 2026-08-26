@@ -10,8 +10,8 @@ export interface ResumeListEntry {
   label: string;
   /** The CV's own "about" line, used as the description. */
   about: string;
-  /** The CV's own headline. Only some versions set one. */
-  headline?: string;
+  /** The CV's own headline. */
+  headline: string;
 }
 
 interface ResumeListProps {
@@ -52,11 +52,9 @@ export function ResumeList({ resumes, currentSlug }: ResumeListProps) {
                     </Badge>
                   )}
                 </div>
-                {resume.headline && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {resume.headline}
-                  </p>
-                )}
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {resume.headline}
+                </p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {resume.about}
                 </p>

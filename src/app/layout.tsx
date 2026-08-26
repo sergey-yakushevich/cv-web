@@ -7,11 +7,10 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { RESUME_DATA } from "@/data/resumes";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://cv.jarocki.me"),
-  title: {
-    default: `${RESUME_DATA.name} - ${RESUME_DATA.about}`,
-    template: `%s | ${RESUME_DATA.name}`,
-  },
+  metadataBase: new URL("https://buildcv.cc"),
+  // No template: the page title is the headline, exactly. A "| Name" suffix
+  // would make the variant pages disagree with the default one.
+  title: RESUME_DATA.headline,
   description: RESUME_DATA.about,
   keywords: [
     "resume",

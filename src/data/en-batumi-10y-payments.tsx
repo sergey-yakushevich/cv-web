@@ -7,6 +7,8 @@ export const RESUME_DATA: ResumeData = {
   location: "Batumi, Georgia",
   locationLink: "https://www.google.com/maps/place/Batumi,+Georgia",
 
+  headline: "Senior Ruby on Rails Engineer — Payments",
+
   about:
     "Ruby on Rails engineer, 10 years, most of them in payments. Fraud detection, KYC, PCI-DSS tokenization, Kafka, PostgreSQL, AWS.",
 

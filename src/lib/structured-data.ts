@@ -61,12 +61,12 @@ export function generateWebPageStructuredData(
     "@type": "WebPage",
     name: `${RESUME_DATA.name} - Resume`,
     description: RESUME_DATA.about,
-    url: "https://cv.jarocki.me",
+    url: "https://buildcv.cc",
     inLanguage: "en-US",
     isPartOf: {
       "@type": "WebSite",
       name: `${RESUME_DATA.name}'s Professional Resume`,
-      url: "https://cv.jarocki.me",
+      url: "https://buildcv.cc",
     },
     about: {
       "@type": "Person",
@@ -88,6 +88,6 @@ export function generateResumeStructuredData(
     about: generatePersonStructuredData(RESUME_DATA),
     name: `${RESUME_DATA.name} - Professional Resume`,
     description: `Professional resume and portfolio of ${RESUME_DATA.name}, ${RESUME_DATA.about}`,
-    url: "https://cv.jarocki.me",
+    url: "https://buildcv.cc",
   };
 }

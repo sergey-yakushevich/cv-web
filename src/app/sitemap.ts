@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { getVariantSlugs } from "@/data/resumes";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://cv.jarocki.me";
+  const baseUrl = "https://buildcv.cc";
   const lastModified = new Date();
 
   return [

@@ -5,16 +5,16 @@ import { DEFAULT_VARIANT } from "@/data/resumes";
 const { data } = DEFAULT_VARIANT;
 
 export const metadata: Metadata = {
-  title: `${data.name} - Resume`,
+  title: data.headline,
   description: data.about,
   openGraph: {
-    title: `${data.name} - Resume`,
+    title: data.headline,
     description: data.about,
     type: "profile",
     locale: DEFAULT_VARIANT.locale,
     images: [
       {
-        url: "https://cv.jarocki.me/opengraph-image",
+        url: "https://buildcv.cc/opengraph-image",
         width: 1200,
         height: 630,
         alt: `${data.name}'s profile picture`,
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${data.name} - Resume`,
+    title: data.headline,
     description: data.about,
-    images: ["https://cv.jarocki.me/opengraph-image"],
+    images: ["https://buildcv.cc/opengraph-image"],
   },
 };
 

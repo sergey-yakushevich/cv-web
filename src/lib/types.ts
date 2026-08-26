@@ -12,7 +12,7 @@ export interface ResumeData {
   location: string;
   locationLink: string;
   about: string;
-  headline?: string;
+  headline: string;
   summary: string | React.ReactNode;
   avatarUrl: string;
   personalWebsiteUrl: string;
