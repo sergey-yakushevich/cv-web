@@ -1,23 +1,28 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { createCv, listCvs, slugAvailable } from "@/lib/db/queries";
+import { createCv, listCvs, slugAvailable, userExists } from "@/lib/db/queries";
 import type { EditableResume } from "@/lib/resume-json";
-import { currentUserId } from "@/lib/user";
 import { isValidSlug, slugify, validateResume } from "@/lib/validate-resume";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * Creates another CV for the signed-in browser.
- *
- * Slugs are unique per user, not globally, so two people can both have
- * /:their-id/senior-engineer without colliding.
- */
-export async function POST(request: NextRequest) {
-  const userId = currentUserId();
+interface RouteContext {
+  params: { userId: string };
+}
 
-  if (!userId) {
-    return NextResponse.json({ error: "No session" }, { status: 401 });
+/**
+ * Adds a CV to the workspace named in the URL.
+ *
+ * It lands in that workspace rather than the caller's own, so it appears in the
+ * "My resumes" list they are looking at. Same rule as editing: the id in the
+ * path is the credential, and holding it is permission enough.
+ *
+ * Slugs are unique per workspace, not globally, so two people can both have
+ * /:their-id/senior-engineer.
+ */
+export async function POST(request: NextRequest, { params }: RouteContext) {
+  if (!userExists(params.userId)) {
+    return NextResponse.json({ error: "Unknown workspace" }, { status: 404 });
   }
 
   let body: { label?: string; data?: unknown };
@@ -40,7 +45,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!slugAvailable(userId, slug)) {
+  if (!slugAvailable(params.userId, slug)) {
     return NextResponse.json(
       { error: `"${slug}" already exists. Pick another name.` },
       { status: 409 }
@@ -53,11 +58,11 @@ export async function POST(request: NextRequest) {
   }
 
   createCv({
-    userId,
+    userId: params.userId,
     slug,
     label,
     data: body.data as EditableResume,
-    position: listCvs(userId).length,
+    position: listCvs(params.userId).length,
   });
 
   return NextResponse.json({ slug });

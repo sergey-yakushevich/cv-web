@@ -14,6 +14,25 @@ import { useEffect } from "react";
 
 const TOKEN_KEY = "cv_vid";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Strips the workspace id out of a path before it is reported.
+ *
+ * Knowing a CV's URL is what grants permission to read *and* edit it — there is
+ * no registration, so the id in the path is the whole credential. Sending the
+ * literal path would file every one of those credentials into the analytics
+ * store next to an IP address and a device fingerprint, so "/<uuid>/my-cv" is
+ * reported as "/:workspace/my-cv". The page view is still counted; the key to
+ * the door is not handed over with it.
+ */
+function redactPath(path: string): string {
+  return path
+    .split("/")
+    .map((segment) => (UUID.test(segment) ? ":workspace" : segment))
+    .join("/");
+}
+
 function uuid(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -59,7 +78,7 @@ function clientContext(): Record<string, unknown> {
     language: navigator.language,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     referrer: document.referrer || null,
-    landing_path: window.location.pathname,
+    landing_path: redactPath(window.location.pathname),
     utm_source: params.get("utm_source"),
     utm_medium: params.get("utm_medium"),
     utm_campaign: params.get("utm_campaign"),
@@ -81,7 +100,9 @@ function send(body: Record<string, unknown>): void {
     headers: { "Content-Type": "application/json" },
     body: json,
     keepalive: true,
-  }).catch(() => {});
+  }).catch(() => {
+    // Tracking must never break the page.
+  });
 }
 
 let contextSent = false;
@@ -111,7 +132,12 @@ function closePageView(): void {
   // not guaranteed to execute.
   send({
     token: visitorToken(),
-    event: { id: view.id, name: "page_view", path: view.path, duration_ms: view.activeMs },
+    event: {
+      id: view.id,
+      name: "page_view",
+      path: view.path,
+      duration_ms: view.activeMs,
+    },
   });
 }
 
@@ -120,7 +146,12 @@ function trackPageView(path: string): void {
 
   closePageView();
 
-  const view: OpenPageView = { id: uuid(), path, activeMs: 0, resumedAt: Date.now() };
+  const view: OpenPageView = {
+    id: uuid(),
+    path,
+    activeMs: 0,
+    resumedAt: Date.now(),
+  };
   openPageView = view;
 
   void (async () => {
@@ -129,11 +160,18 @@ function trackPageView(path: string): void {
       if (!contextSent) {
         contextSent = true;
         const fingerprint = await getFingerprint();
-        Object.assign(body, clientContext(), { device_fingerprint: fingerprint || null });
+        Object.assign(body, clientContext(), {
+          device_fingerprint: fingerprint || null,
+        });
       }
       send({
         ...body,
-        event: { id: view.id, name: "page_view", path, occurred_at: new Date().toISOString() },
+        event: {
+          id: view.id,
+          name: "page_view",
+          path,
+          occurred_at: new Date().toISOString(),
+        },
       });
     } catch {
       // Tracking must never break the page.

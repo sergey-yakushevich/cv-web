@@ -7,9 +7,34 @@ import { currentUserId, firstCvSlug } from "@/lib/user";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "buildcv — a CV that prints itself",
+  title: {
+    absolute: "Free CV Builder — No Sign-Up, ATS-Friendly PDF | buildcv",
+  },
   description:
-    "Write your CV once as structured data, edit it as JSON, and download a PDF whose text layer a résumé parser can actually read.",
+    "Free CV builder, online, no sign-up. Write your CV once as structured data, keep several versions, and download a PDF whose text layer a résumé parser can actually read.",
+  alternates: {
+    canonical: "/",
+  },
+};
+
+/*
+ * WebApplication schema with a zero-price offer — the structured-data way to
+ * say "free CV builder", which is the query this page targets.
+ */
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "buildcv",
+  url: "https://buildcv.cc",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  description:
+    "Free online CV builder. Edit your CV as structured data and download an ATS-friendly PDF. No sign-up.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
 };
 
 /**
@@ -33,14 +58,20 @@ export default function LandingPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 p-8">
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: static JSON-LD, no user input
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <div className="space-y-4">
         <h1 className="text-3xl font-bold tracking-tight">
-          A CV that prints itself
+          The free CV builder that prints itself
         </h1>
         <p className="text-base leading-relaxed text-muted-foreground">
-          Write your CV once as structured data. Edit it as JSON, keep as many
-          versions as you need, and download a PDF whose text layer a résumé
-          parser can actually read — not a picture of one.
+          Build your CV online, free, with no sign-up. Write it once as
+          structured data, edit it as JSON, keep as many versions as you need,
+          and download a PDF whose text layer a résumé parser can actually read
+          — not a picture of one.
         </p>
       </div>
 

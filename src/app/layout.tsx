@@ -15,9 +15,19 @@ import { VisitTracker } from "@/components/visit-tracker";
  */
 export const metadata: Metadata = {
   metadataBase: new URL("https://buildcv.cc"),
-  title: "buildcv",
+  /*
+   * The path contains the id that grants edit access to a CV, so it must never
+   * travel to another site. This is the browser default in current Chrome and
+   * Firefox, but the default is not something to rely on when leaking it hands
+   * a stranger write access.
+   */
+  referrer: "strict-origin-when-cross-origin",
+  title: {
+    default: "Free CV Builder — buildcv",
+    template: "%s — buildcv",
+  },
   description:
-    "Write your CV once as structured data and download a PDF a résumé parser can read.",
+    "Free online CV builder with no sign-up. Write your CV once as structured data and download an ATS-friendly PDF a résumé parser can actually read.",
   formatDetection: {
     email: false,
     address: false,
@@ -28,9 +38,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://buildcv.cc",
     siteName: "buildcv",
-    title: "buildcv",
+    title: "Free CV Builder — buildcv",
     description:
-      "Write your CV once as structured data and download a PDF a résumé parser can read.",
+      "Free online CV builder with no sign-up. Write your CV once as structured data and download an ATS-friendly PDF a résumé parser can actually read.",
   },
   robots: {
     index: true,

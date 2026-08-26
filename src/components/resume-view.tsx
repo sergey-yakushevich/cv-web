@@ -41,11 +41,9 @@ interface ResumeViewProps {
   /** Every CV belonging to the same user, for the "My resumes" tab. */
   cvs: CvRow[];
   userId: string;
-  /** True only for the owner. The API re-checks; this just shapes the UI. */
-  canEdit: boolean;
 }
 
-export function ResumeView({ cv, cvs, userId, canEdit }: ResumeViewProps) {
+export function ResumeView({ cv, cvs, userId }: ResumeViewProps) {
   const data = cv.data;
   const structuredData = generateResumeStructuredData(data);
 
@@ -67,7 +65,6 @@ export function ResumeView({ cv, cvs, userId, canEdit }: ResumeViewProps) {
         </div>
 
         <ResumeWorkspace
-          canEdit={canEdit}
           userId={userId}
           currentSlug={cv.slug}
           json={resumeToJson(data)}

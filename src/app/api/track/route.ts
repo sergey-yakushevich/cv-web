@@ -51,7 +51,9 @@ export async function POST(request: Request) {
       event: body.event ?? null,
     }),
     signal: AbortSignal.timeout(3000),
-  }).catch(() => {});
+  }).catch(() => {
+    // Tracking must never surface an error to the caller.
+  });
 
   return new NextResponse(null, { status: 204 });
 }

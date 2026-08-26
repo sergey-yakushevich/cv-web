@@ -126,7 +126,11 @@ export const CommandMenu = ({
                 key={url}
                 onSelect={() => {
                   setOpen(false);
-                  window.open(url, "_blank");
+                  // "noreferrer" is load-bearing: the current URL contains the
+                  // id that grants edit access to this CV, and without it the
+                  // browser would send that whole address to the site being
+                  // opened, in its Referer header and its logs.
+                  window.open(url, "_blank", "noopener,noreferrer");
                 }}
               >
                 <span>{title}</span>

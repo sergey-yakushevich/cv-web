@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ResumeView } from "@/components/resume-view";
 import { getCv, listCvs } from "@/lib/db/queries";
-import { currentUserId } from "@/lib/user";
 
 // Reads per-user rows, so there is nothing to pre-render.
 export const dynamic = "force-dynamic";
@@ -30,10 +29,10 @@ export function generateMetadata({ params }: PageProps): Metadata {
 /**
  * One CV.
  *
- * Anyone with the URL can read it — the id is the only thing protecting it, and
- * a UUIDv7 has enough randomness not to be guessable. Editing is a different
- * matter: only the owner gets the controls, and the API checks ownership again
- * regardless of what the page decides to render.
+ * Anyone with the URL can read *and* edit it. There is no registration, so the
+ * unguessable id in the path is the whole credential — holding the link is the
+ * permission. The cookie only remembers which workspace to send a returning
+ * visitor back to.
  */
 export default function CvPage({ params }: PageProps) {
   const cv = getCv(params.userId, params.cvSlug);
@@ -42,14 +41,7 @@ export default function CvPage({ params }: PageProps) {
     notFound();
   }
 
-  const isOwner = currentUserId() === params.userId;
-
   return (
-    <ResumeView
-      cv={cv}
-      cvs={listCvs(params.userId)}
-      userId={params.userId}
-      canEdit={isOwner}
-    />
+    <ResumeView cv={cv} cvs={listCvs(params.userId)} userId={params.userId} />
   );
 }

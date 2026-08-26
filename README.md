@@ -47,16 +47,27 @@ would show one person another person's CV, phone number included. A cookie is
 exact. The cost is that clearing cookies, or switching browser, loses access;
 that is the honest trade, and the alternative silently leaks data.
 
-**The URL is the credential.** Anyone holding a link can read that CV and
-download its PDF. UUIDv7 carries enough randomness not to be enumerable, and
-CV pages are `noindex` and kept out of the sitemap, but there is no stronger
-protection than the link.
+**The URL is the credential — for reading *and* writing.** Anyone holding a
+link can read that CV, download its PDF, edit it, and add CVs to that
+workspace. That is the deliberate trade for having no registration: the
+unguessable id in the path is the whole permission model.
 
-Writing is different: every write takes the owner from the cookie, never from
-the URL or the body, so a request cannot name whose CV it is editing.
+    PUT  /api/cvs/:userId/:cvSlug   overwrite that CV
+    POST /api/cvs/:userId           add one to that workspace
 
-    PUT  /api/cvs/:cvSlug   overwrite one of your own CVs
-    POST /api/cvs           create another
+The cookie confers nothing. It only remembers which workspace to send a
+returning visitor back to.
+
+What follows from that, and is worth keeping in mind:
+
+- A link shared with anyone is edit access granted to anyone. There is no undo
+  and no history — an overwrite is final.
+- CV pages are `noindex` and absent from the sitemap.
+- The Referrer-Policy is `strict-origin-when-cross-origin` and outbound links
+  carry `noreferrer`, so the path never travels to another site. Without that,
+  clicking a GitHub link on a CV would hand GitHub's logs an edit-capable URL.
+- The visit tracker reports `/:workspace/my-cv`, not the real path, so
+  credentials do not end up in the analytics store beside an IP address.
 
 ## Editing through the JSON tab
 

@@ -76,9 +76,14 @@ two tables, at `DATABASE_PATH` — a mounted volume in production.
 - **`src/lib/user.ts`** — reads the cookie, creates users. Cookies can only be
   *set* in a route handler, which is why `/api/session/start` exists; Next 14
   middleware runs on the edge, where better-sqlite3 cannot load.
-- **`src/lib/db/queries.ts`** — every CV read takes `(userId, slug)` so a caller
-  cannot reach another account by passing a slug alone.
-- Writes take the owner from the cookie, never the URL or body.
+- **`src/lib/db/queries.ts`** — every read and write takes `(userId, slug)`, so
+  a caller cannot reach another workspace by passing a slug alone.
+- **Anyone holding the URL may read and write.** No registration, so the id in
+  the path is the whole credential; the cookie confers nothing. Do not add an
+  ownership check to the write routes — that is the intended model.
+- Because the path is a credential it must not leak: keep the `noreferrer` on
+  outbound links, the `strict-origin-when-cross-origin` policy, and the
+  `redactPath` call in `src/components/visit-tracker.tsx`.
 
 Fingerprinting was rejected deliberately: 40–80% uniqueness means collisions,
 and a collision would show one person another's CV. Do not reintroduce it as an

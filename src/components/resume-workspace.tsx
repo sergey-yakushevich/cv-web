@@ -24,8 +24,6 @@ const ResumeJsonPanel = dynamic(
 );
 
 interface ResumeWorkspaceProps {
-  /** False on a deployed instance: the save endpoints are refused there. */
-  canEdit: boolean;
   /** Owner of these CVs; every link and API call is scoped to it. */
   userId: string;
   cv: ReactNode;
@@ -44,7 +42,6 @@ interface ResumeWorkspaceProps {
  * not whatever is currently typed into the JSON editor.
  */
 export function ResumeWorkspace({
-  canEdit,
   userId,
   cv,
   json,
@@ -63,7 +60,7 @@ export function ResumeWorkspace({
     },
     {
       value: "json",
-      label: canEdit ? "Edit" : "JSON",
+      label: "Edit",
       icon: Braces,
       content: (
         <ResumeJsonPanel
@@ -71,7 +68,6 @@ export function ResumeWorkspace({
           initialJson={json}
           currentSlug={currentSlug}
           label={currentLabel}
-          canEdit={canEdit}
           userId={userId}
         />
       ),

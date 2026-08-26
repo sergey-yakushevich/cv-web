@@ -1,34 +1,29 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getCv, updateCv } from "@/lib/db/queries";
 import type { EditableResume } from "@/lib/resume-json";
-import { currentUserId } from "@/lib/user";
 import { validateResume } from "@/lib/validate-resume";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 interface RouteContext {
-  params: { cvSlug: string };
+  params: { userId: string; cvSlug: string };
 }
 
 /**
  * Overwrites one CV with the JSON from the editor.
  *
- * The owner comes from the cookie, never from the URL or the body — a request
- * cannot name whose CV it is editing. The page hides the save controls for
- * non-owners, but that is presentation; this is the check that matters.
+ * Anyone holding the URL may write, by design: there is no registration, so the
+ * unguessable id in the path is the whole credential. Knowing the address of a
+ * CV is knowing how to edit it, exactly as it is for reading it.
+ *
+ * The cookie is not consulted. It only remembers which workspace to send *you*
+ * back to; it confers nothing, and a visitor editing a CV they arrived at by
+ * link is the intended behaviour rather than an attack.
  */
 export async function PUT(request: NextRequest, { params }: RouteContext) {
-  const userId = currentUserId();
-
-  if (!userId) {
-    return NextResponse.json({ error: "No session" }, { status: 401 });
-  }
-
-  if (!getCv(userId, params.cvSlug)) {
-    // Same answer whether it is missing or somebody else's: a stranger should
-    // not be able to probe which slugs exist in another account.
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!getCv(params.userId, params.cvSlug)) {
+    return NextResponse.json({ error: "Unknown CV" }, { status: 404 });
   }
 
   let payload: unknown;
@@ -43,7 +38,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: problems.join(" ") }, { status: 422 });
   }
 
-  updateCv(userId, params.cvSlug, payload as EditableResume);
+  updateCv(params.userId, params.cvSlug, payload as EditableResume);
 
   return NextResponse.json({ slug: params.cvSlug });
 }

@@ -40,7 +40,10 @@ const nextConfig = {
           },
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
+            // The path holds the id that grants edit access to a CV, so it
+            // must never leave the origin. "strict-" also drops it on an
+            // HTTPS -> HTTP downgrade.
+            value: 'strict-origin-when-cross-origin'
           },
           {
             key: 'Permissions-Policy',

@@ -16,6 +16,7 @@ function SkillsList({ skills, className }: SkillsListProps) {
       aria-label="List of skills"
     >
       {skills.map((skill, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: a user may list the same skill twice, and the index is what disambiguates them
         <li key={`${skill}-${index}`}>
           <Badge
             variant="secondary"
