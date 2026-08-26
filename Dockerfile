@@ -22,6 +22,20 @@ COPY . .
 
 RUN pnpm build
 
+# Everything below is about image size, and it is not cosmetic: three retained
+# versions of this image filled a 34GB VPS to 98% and broke a deploy.
+#
+#   .next/cache          webpack's build cache, ~550MB, unused once built
+#   swc darwin / gnu     Next ships an SWC binary per platform and pnpm installs
+#                        them all — a macOS one and a glibc one, ~235MB of code
+#                        that cannot execute in an Alpine container
+#   dev dependencies     biome, typescript, tailwind and friends, build-time only
+RUN rm -rf .next/cache \
+      node_modules/.pnpm/@next+swc-darwin-* \
+      node_modules/.pnpm/@next+swc-linux-*-gnu* \
+      node_modules/.pnpm/@img+sharp-darwin-* \
+ && pnpm prune --prod
+
 FROM node:22-alpine
 
 WORKDIR /app
