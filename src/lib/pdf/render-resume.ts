@@ -54,20 +54,26 @@ export async function renderResumePdf({
 
     await page.emulateMediaType("print");
 
-    // Fail loudly rather than shipping an Arial CV: a resume parser reads the
-    // text layer, and the static faces are what keep that layer clean.
-    const unloaded = await page.evaluate(async () => {
+    /*
+     * Fail loudly rather than shipping an Arial CV: a résumé parser reads the
+     * text layer, and the static faces are what keep that layer clean.
+     *
+     * "error" is the signal, not "not loaded". A @font-face is fetched lazily,
+     * only once some text actually needs that family and weight, so a face left
+     * "unloaded" means nothing on the page used it — which is ordinary. A CV
+     * with no work history renders nothing in semibold, and treating that as a
+     * failure made those CVs impossible to download at all.
+     */
+    const failed = await page.evaluate(async () => {
       await document.fonts.ready;
       return [...document.fonts]
-        .filter(
-          (face) => face.family === "Inter Static" && face.status !== "loaded"
-        )
+        .filter((face) => face.status === "error")
         .map((face) => `${face.family} ${face.weight}`);
     });
 
-    if (unloaded.length > 0) {
+    if (failed.length > 0) {
       throw new Error(
-        `Print fonts did not load: ${unloaded.join(", ")}. The PDF would fall back to Arial.`
+        `Print fonts failed to load: ${failed.join(", ")}. The PDF would fall back to a system font.`
       );
     }
 
