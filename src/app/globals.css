@@ -209,14 +209,10 @@
   }
 
   /*
-   * The CV sits inside an animated tab panel on screen. Framer Motion writes
-   * transform, opacity and filter as inline styles on that panel, so they need
-   * !important to undo here.
-   *
-   * This is not cosmetic. A transform on an ancestor makes it the containing
-   * block for everything inside, and Chrome then stops honouring the
-   * page-break rules below: whole jobs start splitting across sheets again,
-   * and a leftover blur or partial opacity would be baked into the PDF.
+   * The CV sits inside a tab panel on screen. Nothing may transform that panel:
+   * a transform on an ancestor makes it the containing block for everything
+   * inside, and Chrome then stops honouring the page-break rules below, so
+   * whole jobs start splitting across sheets. This is the guard for that.
    */
   [role="tabpanel"] {
     transform: none !important;

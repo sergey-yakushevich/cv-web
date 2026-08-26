@@ -1,13 +1,13 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { AnimatePresence, motion, type Variants } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { type ReactNode, useMemo, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 /*
- * Vendored from @shadcn-space/tabs-08, with two changes:
+ * Vendored from @shadcn-space/tabs-08, with three changes:
  *
  *  1. The demo panels and the default-exported demo were removed. Only
  *     AnimatedTabs is used here.
@@ -17,6 +17,9 @@ import { cn } from "@/lib/utils";
  *     data-state rewrite matters: without it the base TabsTrigger keeps its own
  *     `data-[state=active]:bg-background` and paints a second pill behind the
  *     animated indicator.
+ *  3. The panel slide/blur transition and the animated height were removed. The
+ *     sliding pill on the tab list is kept. Panels here hold a whole CV and a
+ *     text editor, and animating them moved content under the cursor.
  */
 
 export type AnimatedTabItem = {
@@ -28,39 +31,6 @@ export type AnimatedTabItem = {
   content: ReactNode;
 };
 
-// Annotated so the literal "spring" narrows: without it TypeScript widens the
-// upstream object's `type` to string and Motion rejects it.
-const panelVariants: Variants = {
-  enter: (dir: number) => ({
-    opacity: 0,
-    x: dir > 0 ? 24 : -24,
-    scale: 0.97,
-    filter: "blur(6px)",
-  }),
-  center: {
-    opacity: 1,
-    x: 0,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: {
-      when: "beforeChildren",
-      staggerChildren: 0.045,
-      delayChildren: 0.05,
-      type: "spring",
-      stiffness: 300,
-      damping: 28,
-      mass: 0.9,
-    },
-  },
-  exit: (dir: number) => ({
-    opacity: 0,
-    x: dir > 0 ? -24 : 24,
-    scale: 0.97,
-    filter: "blur(6px)",
-    transition: { duration: 0.15, ease: "easeIn" },
-  }),
-};
-
 interface AnimatedTabsProps {
   tabs: AnimatedTabItem[];
   defaultValue?: string;
@@ -70,6 +40,8 @@ interface AnimatedTabsProps {
   listClassName?: string;
   contentClassName?: string;
   indicatorId?: string;
+  /** The flex row holding the tab list and the accessory. */
+  rowClassName?: string;
   /** Rendered on the same row as the tab list, after it. */
   listAccessory?: ReactNode;
 }
@@ -83,13 +55,13 @@ export function AnimatedTabs({
   listClassName,
   contentClassName,
   indicatorId = "animated-tabs-indicator",
+  rowClassName,
   listAccessory,
 }: AnimatedTabsProps) {
   const [internalValue, setInternalValue] = useState(
     defaultValue ?? tabs[0]?.value
   );
   const value = controlledValue ?? internalValue;
-  const [direction, setDirection] = useState(1);
 
   const activeTab = useMemo(
     () => tabs.find((tab) => tab.value === value),
@@ -97,9 +69,6 @@ export function AnimatedTabs({
   );
 
   const handleChange = (next: string) => {
-    const prevIndex = tabs.findIndex((tab) => tab.value === value);
-    const nextIndex = tabs.findIndex((tab) => tab.value === next);
-    setDirection(nextIndex > prevIndex ? 1 : -1);
     if (controlledValue === undefined) setInternalValue(next);
     onValueChange?.(next);
   };
@@ -110,7 +79,7 @@ export function AnimatedTabs({
       onValueChange={handleChange}
       className={cn("flex w-full flex-col gap-4", className)}
     >
-      <div className="flex w-full items-center gap-2">
+      <div className={cn("flex w-full items-center gap-2", rowClassName)}>
         <TabsList
           className={cn(
             "no-scrollbar !h-auto w-auto gap-1 overflow-x-auto rounded-2xl border border-border bg-muted/40 p-1",
@@ -185,27 +154,13 @@ export function AnimatedTabs({
         {listAccessory}
       </div>
 
-      <motion.div
-        layout={true}
-        transition={{ layout: { duration: 0.3, ease: "easeInOut" } }}
-        className={cn("relative overflow-hidden", contentClassName)}
-      >
-        <AnimatePresence mode="popLayout" initial={false} custom={direction}>
-          {activeTab && (
-            <motion.div
-              key={activeTab.value}
-              custom={direction}
-              role="tabpanel"
-              variants={panelVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-            >
-              {activeTab.content}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+      <div className={cn("relative", contentClassName)}>
+        {activeTab && (
+          <div key={activeTab.value} role="tabpanel">
+            {activeTab.content}
+          </div>
+        )}
+      </div>
     </Tabs>
   );
 }

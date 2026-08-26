@@ -1,26 +1,28 @@
 import { type ResumeData, reactToString } from "@/lib/types";
 
-export function resumeToJson(data: ResumeData): string {
-  const plain = {
-    name: data.name,
-    initials: data.initials,
-    headline: data.headline,
-    location: data.location,
-    locationLink: data.locationLink,
-    about: data.about,
-    summary: reactToString(data.summary),
-    atsMode: data.atsMode,
-    personalWebsiteUrl: data.personalWebsiteUrl,
-    contact: {
-      email: data.contact.email,
-      tel: data.contact.tel,
-      social: data.contact.social.map(({ name, url }) => ({ name, url })),
-    },
-    work: data.work,
-    education: data.education,
-    skills: data.skills,
-    projects: data.projects,
-  };
+/**
+ * The editable shape of a CV.
+ *
+ * This is what the JSON tab shows and what the save endpoints accept, so it has
+ * to round-trip. Two fields are deliberately not part of it:
+ *
+ *  - `summary` is JSX in the data files. It is flattened to a string here, and
+ *    written back as a string, which ResumeData allows. A summary that was JSX
+ *    does not come back as JSX.
+ *  - `avatarUrl` is a build-hashed path produced by importing the image. Editing
+ *    it would be meaningless and writing it back would break on the next build,
+ *    so the avatar stays in code.
+ */
+export type EditableResume = Omit<ResumeData, "summary" | "avatarUrl"> & {
+  summary: string;
+};
 
-  return JSON.stringify(plain, null, 2);
+export function toEditableResume(data: ResumeData): EditableResume {
+  const { summary, avatarUrl: _avatarUrl, ...rest } = data;
+
+  return { ...rest, summary: reactToString(summary) };
+}
+
+export function resumeToJson(data: ResumeData): string {
+  return JSON.stringify(toEditableResume(data), null, 2);
 }

@@ -10,8 +10,9 @@ import {
   AnimatedTabs,
 } from "@/components/shadcn-space/tabs/tabs-08";
 
-const CodeBlock = dynamic(
-  () => import("@/components/ui/code-block").then((mod) => mod.CodeBlock),
+const ResumeJsonPanel = dynamic(
+  () =>
+    import("@/components/resume-json-panel").then((mod) => mod.ResumeJsonPanel),
   {
     ssr: false,
     loading: () => (
@@ -32,11 +33,11 @@ interface ResumeWorkspaceProps {
 /**
  * The screen chrome around the CV: three tabs plus the download button.
  *
- * None of this reaches the PDF. The tab list and the download button are
- * print:hidden, and the print rules in globals.css undo the tab panel's
- * animation, which would otherwise break pagination. The PDF is rendered from
- * a fresh load of this page, so it always gets the CV tab no matter which tab
- * is selected on screen.
+ * None of this reaches the PDF: the tab row is print:hidden, and globals.css
+ * keeps the tab panel free of transforms so pagination still works. The PDF is
+ * rendered from a fresh load of this page, so it always gets the CV tab no
+ * matter which tab is selected on screen — and always the CV as saved on disk,
+ * not whatever is currently typed into the JSON editor.
  */
 export function ResumeWorkspace({
   cv,
@@ -56,13 +57,10 @@ export function ResumeWorkspace({
       label: "JSON",
       icon: Braces,
       content: (
-        <CodeBlock
-          code={json}
-          language="json"
-          showHeader={false}
-          showLineNumbers={true}
-          scrollable={true}
-          maxHeight={720}
+        <ResumeJsonPanel
+          key={`${currentSlug}:${json}`}
+          initialJson={json}
+          currentSlug={currentSlug}
         />
       ),
     },
@@ -83,6 +81,7 @@ export function ResumeWorkspace({
       // clipping the CV where it breaks across sheets.
       className="mx-auto max-w-2xl print:block print:max-w-none"
       contentClassName="print:overflow-visible"
+      rowClassName="justify-center print:hidden"
       listClassName="print:hidden"
       listAccessory={
         <div className="print:hidden">

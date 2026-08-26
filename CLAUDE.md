@@ -74,6 +74,14 @@ The app includes special print styles to ensure the CV looks good when printed. 
 - **`src/lib/pdf/browser.ts`** — one reused Chrome instance, and the `CHROME_PATH` lookup. Uses `puppeteer-core`, so it drives an installed Chrome instead of downloading a second one.
 - The route must stay `runtime = "nodejs"` and `dynamic = "force-dynamic"`.
 
+### Editing (JSON tab)
+
+`PUT /api/resumes/[variant]` overwrites a version's data file; `POST /api/resumes` creates one and registers it in `resumes.ts`. Both go through `src/lib/resume-file.ts`, which owns validation, file rendering and the registry splice.
+
+These write into the source tree, so `editingEnabled()` refuses them in production unless `CV_ENABLE_EDITING=1`. Do not remove that guard.
+
+`summary` round-trips as a string, not JSX, and `avatarUrl` is not part of the editable JSON — see the note on `EditableResume` in `src/lib/resume-json.ts`.
+
 **Font warning**: the CV body uses Tailwind's `font-serif`, which resolves to the *generic* serif family, not to a self-hosted font. The printed body is therefore whatever serif the host provides — Times on macOS. Any container must supply a serif that Chrome can embed as TrueType. The Dockerfile installs `font-liberation` for this reason; `ttf-freefont` produces a Type 3 font and corrupts the text layer for CV parsers.
 
 ### Deployment

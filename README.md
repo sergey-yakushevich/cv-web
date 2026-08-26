@@ -36,10 +36,36 @@ route, the sitemap, the version list and the PDF endpoint all read from it.
 Three tabs plus a download button:
 
 - **CV** — the résumé
-- **JSON** — the same data as JSON
+- **JSON** — the same data, editable (see below)
 - **My resumes** — every version; selecting one opens it
 
 `CMD+J` opens a command menu with the same actions.
+
+## Editing through the JSON tab
+
+The JSON tab is a text field, not a viewer. Editing it enables two buttons:
+
+| Button | Effect |
+| --- | --- |
+| **Save** | Overwrites this version — `PUT /api/resumes/<slug>` |
+| **Save as new CV** | Asks for a name, then creates another version — `POST /api/resumes` |
+
+Both write into `src/data`: `Save` rewrites the version's data file, and
+`Save as new CV` writes a new one *and* adds it to the registry in
+`resumes.ts`. Neither button is enabled until something changes and the JSON
+still parses.
+
+Two fields are not editable there, on purpose:
+
+- **`summary`** is JSX in the data files. It is flattened to a string for the
+  editor and written back as a string, which `ResumeData` accepts. A summary
+  that was JSX does not come back as JSX.
+- **`avatarUrl`** is a build-hashed path produced by importing the image, so
+  writing it back would break on the next build. The avatar stays in code.
+
+**These endpoints write to the source tree, so they are refused in production**
+unless `CV_ENABLE_EDITING=1` is set. A deployed instance without that variable
+is read-only; otherwise anyone visiting it could rewrite the CV.
 
 ## How the PDF is made
 
