@@ -1,7 +1,6 @@
-import React from "react";
+import type { RESUME_DATA } from "@/data/resumes";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Section } from "../../components/ui/section";
-import type { RESUME_DATA } from "@/data/resume-data";
 
 type Education = (typeof RESUME_DATA)["education"][number];
 
@@ -10,9 +9,6 @@ interface EducationPeriodProps {
   end: Education["end"];
 }
 
-/**
- * Displays the education period in a consistent format
- */
 function EducationPeriod({ start, end }: EducationPeriodProps) {
   return (
     <div
@@ -28,14 +24,11 @@ interface EducationItemProps {
   education: Education;
 }
 
-/**
- * Individual education card component
- */
 function EducationItem({ education }: EducationItemProps) {
   const { school, start, end, degree } = education;
 
   return (
-    <Card>
+    <Card className="print-avoid-break">
       <CardHeader>
         <div className="flex items-center justify-between gap-x-2 text-base">
           <h3
@@ -60,18 +53,18 @@ function EducationItem({ education }: EducationItemProps) {
 }
 
 interface EducationListProps {
+  heading?: string;
   education: readonly Education[];
 }
 
-/**
- * Main education section component
- * Renders a list of education experiences
- */
-export function Education({ education }: EducationListProps) {
+export function Education({
+  education,
+  heading = "Education",
+}: EducationListProps) {
   return (
     <Section className="font-sans">
       <h2 className="text-xl font-bold" id="education-section">
-        Education
+        {heading}
       </h2>
       <div
         className="space-y-4"

@@ -19,6 +19,7 @@ pnpm format       # Check code formatting with Biome
 pnpm format:fix   # Format code with Biome
 pnpm check        # Run both linting and formatting checks
 pnpm check:fix    # Run both linting and formatting with auto-fix
+pnpm cv:pdf       # Write every CV version to generated-cvs/ (needs the app running)
 ```
 
 ### Docker Deployment
@@ -65,6 +66,15 @@ The app exposes a GraphQL endpoint at `/graphql` that serves the resume data. Th
 
 ### Print Optimization
 The app includes special print styles to ensure the CV looks good when printed. Test print functionality when making layout changes.
+
+### PDF Generation
+`CMD+J` → **Download PDF** saves the current CV version without the print dialog. The request goes to `/api/pdf/[variant]`, which drives headless Chrome over the same page and the same `@media print` CSS, so the result matches `CMD+P`.
+
+- **`src/lib/pdf/render-resume.ts`** — the only place that holds the render settings. Both the API route and `pnpm cv:pdf` call it, so they cannot drift apart. Each setting is load-bearing and documented in the file; in particular it waits for `document.fonts.ready`, without which Chrome prints before the Inter Static faces load and silently falls back to Arial.
+- **`src/lib/pdf/browser.ts`** — one reused Chrome instance, and the `CHROME_PATH` lookup. Uses `puppeteer-core`, so it drives an installed Chrome instead of downloading a second one.
+- The route must stay `runtime = "nodejs"` and `dynamic = "force-dynamic"`.
+
+**Font warning**: the CV body uses Tailwind's `font-serif`, which resolves to the *generic* serif family, not to a self-hosted font. The printed body is therefore whatever serif the host provides — Times on macOS. Any container must supply a serif that Chrome can embed as TrueType. The Dockerfile installs `font-liberation` for this reason; `ttf-freefont` produces a Type 3 font and corrupts the text layer for CV parsers.
 
 ### Deployment
 The app is optimized for Vercel deployment but can be deployed anywhere that supports Next.js applications. Docker support is included for containerized deployments.

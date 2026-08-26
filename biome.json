@@ -9,6 +9,22 @@
     "ignoreUnknown": false,
     "includes": ["src/**/*"]
   },
+  "overrides": [
+    {
+      "includes": ["src/components/ui/**", "src/components/shadcn-space/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off",
+            "useButtonType": "off"
+          },
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
+    }
+  ],
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,

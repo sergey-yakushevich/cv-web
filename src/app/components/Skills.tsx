@@ -1,7 +1,6 @@
-import React from "react";
+import { cn } from "@/lib/utils";
 import { Badge } from "../../components/ui/badge";
 import { Section } from "../../components/ui/section";
-import { cn } from "@/lib/utils";
 
 type Skills = readonly string[];
 
@@ -10,9 +9,6 @@ interface SkillsListProps {
   className?: string;
 }
 
-/**
- * Renders a list of skills as badges
- */
 function SkillsList({ skills, className }: SkillsListProps) {
   return (
     <ul
@@ -35,19 +31,16 @@ function SkillsList({ skills, className }: SkillsListProps) {
 }
 
 interface SkillsProps {
+  heading?: string;
   skills: Skills;
   className?: string;
 }
 
-/**
- * Skills section component
- * Displays a list of professional skills as badges
- */
-export function Skills({ skills, className }: SkillsProps) {
+export function Skills({ skills, className, heading = "Skills" }: SkillsProps) {
   return (
     <Section className={className}>
       <h2 className="text-xl font-bold" id="skills-section">
-        Skills
+        {heading}
       </h2>
       <SkillsList skills={skills} aria-labelledby="skills-section" />
     </Section>

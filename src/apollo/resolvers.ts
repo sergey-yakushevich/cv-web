@@ -1,5 +1,5 @@
 import { Query, Resolver } from "type-graphql";
-import { RESUME_DATA } from "../data/resume-data";
+import { RESUME_DATA } from "../data/resumes";
 import { resumeDataToGraphQL } from "../lib/types";
 import { Me } from "./type-defs";
 

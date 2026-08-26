@@ -1,6 +1,9 @@
-import { RESUME_DATA } from "@/data/resume-data";
+import { RESUME_DATA as DEFAULT_RESUME } from "@/data/resumes";
+import type { ResumeData } from "@/lib/types";
 
-export function generatePersonStructuredData() {
+export function generatePersonStructuredData(
+  RESUME_DATA: ResumeData = DEFAULT_RESUME
+) {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -50,7 +53,9 @@ export function generatePersonStructuredData() {
   };
 }
 
-export function generateWebPageStructuredData() {
+export function generateWebPageStructuredData(
+  RESUME_DATA: ResumeData = DEFAULT_RESUME
+) {
   return {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -67,18 +72,20 @@ export function generateWebPageStructuredData() {
       "@type": "Person",
       name: RESUME_DATA.name,
     },
-    mainEntity: generatePersonStructuredData(),
+    mainEntity: generatePersonStructuredData(RESUME_DATA),
   };
 }
 
-export function generateResumeStructuredData() {
+export function generateResumeStructuredData(
+  RESUME_DATA: ResumeData = DEFAULT_RESUME
+) {
   return {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
     dateCreated: new Date().toISOString(),
     dateModified: new Date().toISOString(),
-    mainEntity: generatePersonStructuredData(),
-    about: generatePersonStructuredData(),
+    mainEntity: generatePersonStructuredData(RESUME_DATA),
+    about: generatePersonStructuredData(RESUME_DATA),
     name: `${RESUME_DATA.name} - Professional Resume`,
     description: `Professional resume and portfolio of ${RESUME_DATA.name}, ${RESUME_DATA.about}`,
     url: "https://cv.jarocki.me",

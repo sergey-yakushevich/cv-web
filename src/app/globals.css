@@ -48,11 +48,16 @@
     --shadow-color: oklch(0 0 0);
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
+    --shadow-sm:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
@@ -103,11 +108,16 @@
     --shadow-color: oklch(0 0 0);
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
+    --shadow-sm:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl:
+      0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   }
 }
@@ -122,10 +132,44 @@
 
 @font-face {
   font-family: "Serif";
-  src: url("/fonts/Source_Serif_4/SourceSerif4-VariableFont_opsz,wght.ttf") format("truetype");
+  src: url("/fonts/Source_Serif_4/SourceSerif4-VariableFont_opsz,wght.ttf")
+    format("truetype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+}
+
+/*
+ * Static Inter, used for printing only. See the note in @media print below:
+ * Chrome cannot embed a variable font instance in a PDF as a normal TrueType
+ * font, so it writes one Type 3 subset per weight/optical-size combination.
+ * Those subsets reuse the same character codes for different letters, which is
+ * what corrupts the text layer for some resume parsers. Static faces embed
+ * normally and extract cleanly, and they render identically on the page.
+ */
+@font-face {
+  font-family: "Inter Static";
+  src: url("/fonts/Inter/static/Inter_18pt-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Inter Static";
+  src: url("/fonts/Inter/static/Inter_18pt-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Inter Static";
+  src: url("/fonts/Inter/static/Inter_18pt-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Inter Static";
+  src: url("/fonts/Inter/static/Inter_18pt-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
 }
 
 @layer base {
@@ -139,4 +183,118 @@
 
 .print-force-new-page {
   page-break-before: always;
+}
+
+@media print {
+  /*
+   * Swap the variable Inter for its static faces before printing.
+   *
+   * Chrome's PDF writer cannot embed an instance of a variable font as an
+   * ordinary TrueType font. It falls back to Type 3 fonts and emits a separate
+   * subset per weight and optical size, each with its own custom encoding that
+   * starts numbering at low character codes. Nine subsets came out of this page
+   * and their encodings collide: code 217 means "Y" in one and "k" or "w" in
+   * another, code 8 means "%" in one and "n" in another.
+   *
+   * A PDF reader that scopes ToUnicode per font gets the right text. One that
+   * builds a single table per page silently substitutes wrong letters, which is
+   * how a resume parser turned linkedin.com/in/sergey-yakushevich into
+   * liNkedin.com/in/sergey-YakusheVich.
+   *
+   * The static faces embed as normal TrueType with one encoding, and they are
+   * the same typeface, so nothing about the printed page changes visually.
+   */
+  :root {
+    --font-sans: "Inter Static", Arial, Helvetica, sans-serif;
+  }
+
+  /*
+   * The CV sits inside an animated tab panel on screen. Framer Motion writes
+   * transform, opacity and filter as inline styles on that panel, so they need
+   * !important to undo here.
+   *
+   * This is not cosmetic. A transform on an ancestor makes it the containing
+   * block for everything inside, and Chrome then stops honouring the
+   * page-break rules below: whole jobs start splitting across sheets again,
+   * and a leftover blur or partial opacity would be baked into the PDF.
+   */
+  [role="tabpanel"] {
+    transform: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+  }
+
+  /*
+   * Chrome defaults to roughly a 1in margin, and the page already has its own
+   * padding. Reclaiming it is what keeps the CV to two pages once whole jobs
+   * stop splitting across sheets.
+   */
+  @page {
+    margin: 12mm;
+  }
+
+  /*
+   * Tailwind sizes are rem based, so shrinking the root shrinks the whole CV
+   * proportionally. 14px keeps body text at about 10.5pt, which is normal for
+   * a printed resume, and buys back roughly a page.
+   */
+  html {
+    font-size: 14px;
+  }
+
+  /*
+   * Keeps one job, one degree or one project on a single sheet instead of
+   * stranding the company name at the bottom of a page. page-break-inside is
+   * the legacy spelling and break-inside is the current one. Print engines are
+   * inconsistent about which they honour, so both are set.
+   *
+   * Caveat: a block taller than the printable area cannot be kept together.
+   * The browser breaks it anyway rather than dropping it.
+   */
+  .print-avoid-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* A section heading never sits alone at the foot of a page. */
+  h2,
+  h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /*
+   * Fallback for the case break-inside cannot cover: a block taller than the
+   * printable area is split regardless, and the natural split point is right
+   * under its own header, which strands a company name and its badge row at
+   * the foot of a sheet. Gluing the header to what follows pushes the break
+   * down into the bullet list instead.
+   */
+  .print-avoid-break > :first-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* A wrapped bullet keeps its own lines together. */
+  li {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    orphans: 2;
+    widows: 2;
+  }
+
+  /*
+   * A list never leaves a single bullet behind on either side of a break.
+   */
+  ul,
+  ol {
+    orphans: 2;
+    widows: 2;
+  }
+
+  /* No single stranded line from a paragraph at a page boundary. */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
 }

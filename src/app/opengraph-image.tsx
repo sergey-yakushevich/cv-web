@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { RESUME_DATA } from "../data/resume-data";
+import { RESUME_DATA } from "../data/resumes";
 
 export const runtime = "edge";
 

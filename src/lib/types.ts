@@ -1,6 +1,8 @@
 import type { StaticImageData } from "next/image";
 
-export type ResumeIcon = React.ComponentType<React.SVGProps<SVGSVGElement>> | StaticImageData;
+export type ResumeIcon =
+  | React.ComponentType<React.SVGProps<SVGSVGElement>>
+  | StaticImageData;
 
 export type IconType = "github" | "linkedin" | "x" | "globe" | "mail" | "phone";
 
@@ -10,6 +12,8 @@ export interface ResumeData {
   location: string;
   locationLink: string;
   about: string;
+  headline?: string;
+  atsMode?: boolean;
   summary: string | React.ReactNode;
   avatarUrl: string;
   personalWebsiteUrl: string;
@@ -35,7 +39,7 @@ export interface ResumeData {
     title: string;
     start: string;
     end: string | null;
-    description: string | React.ReactNode;
+    description: string[];
   }>;
   skills: string[];
   projects: Array<{
@@ -49,7 +53,6 @@ export interface ResumeData {
   }>;
 }
 
-// GraphQL compatible types (without React components)
 export interface GraphQLSocial {
   name: string;
   url: string;
@@ -106,7 +109,6 @@ export interface GraphQLMe {
   projects: GraphQLProject[];
 }
 
-// Helper function to convert React content to string
 export function reactToString(content: React.ReactNode): string {
   if (typeof content === "string") return content;
   if (Array.isArray(content)) {
@@ -119,7 +121,6 @@ export function reactToString(content: React.ReactNode): string {
   return "";
 }
 
-// Transform function to convert ResumeData to GraphQL compatible format
 export function resumeDataToGraphQL(data: ResumeData): GraphQLMe {
   return {
     name: data.name,
@@ -143,7 +144,7 @@ export function resumeDataToGraphQL(data: ResumeData): GraphQLMe {
       title: job.title,
       start: job.start,
       end: job.end || "Present",
-      description: reactToString(job.description),
+      description: job.description.join(" "),
     })),
     skills: data.skills,
     projects: data.projects.map((project) => ({

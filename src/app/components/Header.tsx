@@ -1,24 +1,20 @@
-import { GlobeIcon } from "lucide-react"; // Only need GlobeIcon for location display
+import {
+  GithubIcon,
+  GlobeIcon,
+  LinkedinIcon,
+  MailIcon,
+  PhoneIcon,
+} from "lucide-react";
 import React from "react";
+import type { ResumeData } from "@/lib/types";
 import { Avatar } from "../../components/avatar";
-import { RESUME_DATA } from "@/data/resume-data";
-
-// No longer need other icon imports, button import, or specific icon/type mappings
-// as we are using text links only for the main contact details.
 
 interface LocationLinkProps {
-  location: typeof RESUME_DATA.location;
-  locationLink: typeof RESUME_DATA.locationLink;
+  location: ResumeData["location"];
+  locationLink: ResumeData["locationLink"];
 }
 
-/**
- * Renders the location as a clickable link with a GlobeIcon.
- */
-function LocationLink({
-  location,
-  locationLink,
-}: LocationLinkProps) {
-  // Only render if both location and locationLink are provided
+function LocationLink({ location, locationLink }: LocationLinkProps) {
   if (!location || !locationLink) {
     return null;
   }
@@ -39,32 +35,36 @@ function LocationLink({
   );
 }
 
+type ContactIcon = typeof GlobeIcon;
+
 interface ContactLinkProps {
   href: string;
   text: string;
+  icon: ContactIcon;
 }
 
-/**
- * Renders a single contact link with consistent text styling.
- */
-function ContactLink({ href, text }: ContactLinkProps) {
+function ContactLink({ href, text, icon: Icon }: ContactLinkProps) {
   return (
     <a
-      className="underline hover:text-foreground/70"
+      className="inline-flex items-center gap-x-1 underline hover:text-foreground/70"
       href={href}
-      target="_blank" // Open in new tab for external links
+      target="_blank"
       rel="noopener noreferrer"
     >
+      <Icon className="size-3 shrink-0 no-underline" aria-hidden="true" />
       {text}
     </a>
   );
 }
 
-/**
- * Header component displaying personal information and consolidated contact details.
- */
-export function Header() {
-  // Find social links if they exist
+interface HeaderProps {
+  data: ResumeData;
+}
+
+export function Header({ data: RESUME_DATA }: HeaderProps) {
+  const websiteSocial = RESUME_DATA.contact.social.find(
+    (s) => s.icon === "globe"
+  );
   const githubSocial = RESUME_DATA.contact.social.find(
     (s) => s.icon === "github"
   );
@@ -72,30 +72,54 @@ export function Header() {
     (s) => s.icon === "linkedin"
   );
 
-  // Collect only the specific links for the "Email / GitHub / LinkedIn" line
-  const mainContactLineLinks: { href: string; text: string }[] = [];
+  const ats = RESUME_DATA.atsMode === true;
 
-  // Add Email
+  const bareUrl = (url: string) =>
+    url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+  const mainContactLineLinks: {
+    href: string;
+    text: string;
+    icon: ContactIcon;
+  }[] = [];
+
+  if (websiteSocial) {
+    mainContactLineLinks.push({
+      href: websiteSocial.url,
+      text: ats ? bareUrl(websiteSocial.url) : websiteSocial.name,
+      icon: GlobeIcon,
+    });
+  }
+
   if (RESUME_DATA.contact.email) {
     mainContactLineLinks.push({
       href: `mailto:${RESUME_DATA.contact.email}`,
-      text: "Email", // Display "Email" as text
+      text: ats ? RESUME_DATA.contact.email : "Email",
+      icon: MailIcon,
     });
   }
 
-  // Add GitHub
+  if (ats && RESUME_DATA.contact.tel) {
+    mainContactLineLinks.push({
+      href: `tel:${RESUME_DATA.contact.tel}`,
+      text: RESUME_DATA.contact.tel,
+      icon: PhoneIcon,
+    });
+  }
+
   if (githubSocial) {
     mainContactLineLinks.push({
       href: githubSocial.url,
-      text: "GitHub", // Display "GitHub" as text
+      text: ats ? bareUrl(githubSocial.url) : "GitHub",
+      icon: GithubIcon,
     });
   }
 
-  // Add LinkedIn
   if (linkedinSocial) {
     mainContactLineLinks.push({
       href: linkedinSocial.url,
-      text: "LinkedIn", // Display "LinkedIn" as text
+      text: ats ? bareUrl(linkedinSocial.url) : "LinkedIn",
+      icon: LinkedinIcon,
     });
   }
 
@@ -106,19 +130,26 @@ export function Header() {
           {RESUME_DATA.name}
         </h1>
 
-        {/* Location link on its own line (renders null if data is missing) */}
+        {RESUME_DATA.headline && (
+          <p className="font-sans text-sm font-medium text-foreground">
+            {RESUME_DATA.headline}
+          </p>
+        )}
+
         <LocationLink
           location={RESUME_DATA.location}
           locationLink={RESUME_DATA.locationLink}
         />
 
-        {/* Consolidated main contact links line: Email / GitHub / LinkedIn */}
         {mainContactLineLinks.length > 0 && ( // Only render this div if there are links to display
           <div className="flex flex-wrap items-center gap-x-2 text-sm font-sans text-foreground/80">
             {mainContactLineLinks.map((link, index) => (
               <React.Fragment key={link.href}>
-                <ContactLink href={link.href} text={link.text} />
-                {/* Render separator only between links, not after the last one */}
+                <ContactLink
+                  href={link.href}
+                  text={link.text}
+                  icon={link.icon}
+                />
                 {index < mainContactLineLinks.length - 1 && (
                   <span aria-hidden="true">/</span>
                 )}
@@ -128,7 +159,6 @@ export function Header() {
         )}
       </div>
 
-      {/* Avatar component, always present */}
       <Avatar
         className="size-28"
         src={RESUME_DATA.avatarUrl}
