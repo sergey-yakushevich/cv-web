@@ -1,0 +1,77 @@
+import type { EditableResume } from "@/lib/resume-json";
+
+/**
+ * Checks a parsed JSON payload has the shape the CV renderer expects.
+ *
+ * Returns the problems rather than throwing, so the editor can show all of them
+ * at once. This is not a full schema check: it covers the fields the page would
+ * crash on, which are the arrays it maps over.
+ */
+export function validateResume(input: unknown): string[] {
+  const problems: string[] = [];
+  const data = input as Partial<EditableResume> | null;
+
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return ["The JSON must be an object."];
+  }
+
+  const requiredStrings: (keyof EditableResume)[] = [
+    "name",
+    "initials",
+    "location",
+    "headline",
+    "about",
+    "summary",
+  ];
+  for (const key of requiredStrings) {
+    if (typeof data[key] !== "string" || !(data[key] as string).trim()) {
+      problems.push(`"${key}" must be a non-empty string.`);
+    }
+  }
+
+  const requiredArrays: (keyof EditableResume)[] = [
+    "work",
+    "education",
+    "skills",
+    "projects",
+  ];
+  for (const key of requiredArrays) {
+    if (!Array.isArray(data[key])) {
+      problems.push(`"${key}" must be an array.`);
+    }
+  }
+
+  if (!data.contact || typeof data.contact !== "object") {
+    problems.push('"contact" must be an object.');
+  } else if (!Array.isArray(data.contact.social)) {
+    problems.push('"contact.social" must be an array.');
+  }
+
+  if (Array.isArray(data.work)) {
+    data.work.forEach((job, index) => {
+      if (!Array.isArray(job?.description)) {
+        problems.push(
+          `work[${index}].description must be an array of bullets.`
+        );
+      }
+      if (!Array.isArray(job?.badges)) {
+        problems.push(`work[${index}].badges must be an array.`);
+      }
+    });
+  }
+
+  return problems;
+}
+
+/** Turns "EN / Batumi / Go 2026" into "en-batumi-go-2026". */
+export function slugify(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+export function isValidSlug(slug: string): boolean {
+  return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug) && slug.length <= 60;
+}

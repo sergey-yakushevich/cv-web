@@ -3,28 +3,20 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import type React from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { RESUME_DATA } from "@/data/resumes";
 
+/*
+ * Site-wide defaults only.
+ *
+ * These used to be built from Sergey's CV — his name as the author, his about
+ * line as the description, his personal site as the canonical URL. With one CV
+ * per user that is wrong on every page but his, so the shell is now neutral and
+ * each CV page supplies its own title and description.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL("https://buildcv.cc"),
-  // No template: the page title is the headline, exactly. A "| Name" suffix
-  // would make the variant pages disagree with the default one.
-  title: RESUME_DATA.headline,
-  description: RESUME_DATA.about,
-  keywords: [
-    "resume",
-    "cv",
-    "portfolio",
-    RESUME_DATA.name,
-    "software engineer",
-    "full stack developer",
-    "react",
-    "next.js",
-    "typescript",
-  ],
-  authors: [{ name: RESUME_DATA.name }],
-  creator: RESUME_DATA.name,
-  publisher: RESUME_DATA.name,
+  title: "buildcv",
+  description:
+    "Write your CV once as structured data and download a PDF a résumé parser can read.",
   formatDetection: {
     email: false,
     address: false,
@@ -33,30 +25,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: RESUME_DATA.personalWebsiteUrl,
-    siteName: `${RESUME_DATA.name}'s CV`,
-    title: `${RESUME_DATA.name} - ${RESUME_DATA.about}`,
-    description: RESUME_DATA.about,
+    url: "https://buildcv.cc",
+    siteName: "buildcv",
+    title: "buildcv",
+    description:
+      "Write your CV once as structured data and download a PDF a résumé parser can read.",
   },
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `${RESUME_DATA.name} - ${RESUME_DATA.about}`,
-    description: RESUME_DATA.about,
-    creator: "@BartoszJarocki",
-  },
-  alternates: {
-    canonical: RESUME_DATA.personalWebsiteUrl,
   },
 };
 

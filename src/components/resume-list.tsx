@@ -17,9 +17,10 @@ export interface ResumeListEntry {
 interface ResumeListProps {
   resumes: ResumeListEntry[];
   currentSlug: string;
+  userId: string;
 }
 
-export function ResumeList({ resumes, currentSlug }: ResumeListProps) {
+export function ResumeList({ resumes, currentSlug, userId }: ResumeListProps) {
   const router = useRouter();
 
   return (
@@ -31,7 +32,7 @@ export function ResumeList({ resumes, currentSlug }: ResumeListProps) {
           <li key={resume.slug}>
             <button
               type="button"
-              onClick={() => router.push(`/${resume.slug}`)}
+              onClick={() => router.push(`/${userId}/${resume.slug}`)}
               aria-current={isCurrent ? "page" : undefined}
               className={cn(
                 "group flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition-colors",

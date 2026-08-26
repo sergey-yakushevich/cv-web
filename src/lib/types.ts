@@ -14,7 +14,8 @@ export interface ResumeData {
   about: string;
   headline: string;
   summary: string | React.ReactNode;
-  avatarUrl: string;
+  /** Optional image URL. Empty for most users; the initials show instead. */
+  avatarUrl?: string;
   personalWebsiteUrl: string;
   contact: {
     email: string;
@@ -99,7 +100,8 @@ export interface GraphQLMe {
   locationLink: string;
   about: string;
   summary: string;
-  avatarUrl: string;
+  /** Optional image URL. Empty for most users; the initials show instead. */
+  avatarUrl?: string;
   personalWebsiteUrl: string;
   contact: GraphQLContact;
   education: GraphQLEducation[];

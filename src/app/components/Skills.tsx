@@ -15,8 +15,8 @@ function SkillsList({ skills, className }: SkillsListProps) {
       className={cn("flex list-none flex-wrap gap-1 p-0", className)}
       aria-label="List of skills"
     >
-      {skills.map((skill) => (
-        <li key={skill}>
+      {skills.map((skill, index) => (
+        <li key={`${skill}-${index}`}>
           <Badge
             variant="secondary"
             className="align-middle text-xs"

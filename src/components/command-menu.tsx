@@ -19,6 +19,7 @@ interface Props {
   links: { url: string; title: string }[];
   variants?: { slug: string; label: string }[];
   currentSlug?: string;
+  userId: string;
 }
 
 const DOWNLOAD_LABEL = {
@@ -27,14 +28,19 @@ const DOWNLOAD_LABEL = {
   failed: "Download failed — use Print instead",
 } as const;
 
-export const CommandMenu = ({ links, variants = [], currentSlug }: Props) => {
+export const CommandMenu = ({
+  links,
+  variants = [],
+  currentSlug,
+  userId,
+}: Props) => {
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
   const {
     state: download,
     download: runDownload,
     reset,
-  } = useCvDownload(currentSlug);
+  } = useCvDownload(userId, currentSlug);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -103,7 +109,7 @@ export const CommandMenu = ({ links, variants = [], currentSlug }: Props) => {
                   value={`${label} ${slug}`}
                   onSelect={() => {
                     setOpen(false);
-                    router.push(`/${slug}`);
+                    router.push(`/${userId}/${slug}`);
                   }}
                 >
                   <span>

@@ -19,7 +19,7 @@ pnpm format       # Check code formatting with Biome
 pnpm format:fix   # Format code with Biome
 pnpm check        # Run both linting and formatting checks
 pnpm check:fix    # Run both linting and formatting with auto-fix
-pnpm cv:pdf       # Write every CV version to generated-cvs/ (needs the app running)
+pnpm cv:import <userId>  # Load src/data CVs into one account (local only)
 ```
 
 ### Docker Deployment
@@ -59,7 +59,7 @@ docker compose down      # Stop the container
 ## Development Notes
 
 ### Adding New Sections
-To add new sections to the CV, modify the `RESUME_DATA` object in `src/data/resume-data.tsx`. The layout automatically adjusts based on the data provided.
+CV content lives in the database, one JSON blob per CV. `src/lib/resume-json.ts` defines the editable shape; the renderer components read it directly.
 
 ### GraphQL API
 The app exposes a GraphQL endpoint at `/graphql` that serves the resume data. This can be used to integrate the CV data with other applications.
@@ -67,22 +67,41 @@ The app exposes a GraphQL endpoint at `/graphql` that serves the resume data. Th
 ### Print Optimization
 The app includes special print styles to ensure the CV looks good when printed. Test print functionality when making layout changes.
 
+### Users and storage
+
+No sign-up. The first visit mints a UUIDv7 into an httpOnly `cv_uid` cookie and
+creates a user with one starter CV. Data lives in SQLite (`better-sqlite3`),
+two tables, at `DATABASE_PATH` — a mounted volume in production.
+
+- **`src/lib/user.ts`** — reads the cookie, creates users. Cookies can only be
+  *set* in a route handler, which is why `/api/session/start` exists; Next 14
+  middleware runs on the edge, where better-sqlite3 cannot load.
+- **`src/lib/db/queries.ts`** — every CV read takes `(userId, slug)` so a caller
+  cannot reach another account by passing a slug alone.
+- Writes take the owner from the cookie, never the URL or body.
+
+Fingerprinting was rejected deliberately: 40–80% uniqueness means collisions,
+and a collision would show one person another's CV. Do not reintroduce it as an
+identity mechanism.
+
+`src/data/*` are Sergey's real CVs and are **not** what new users get — that is
+`src/data/starter-template.ts`. Keep it that way.
+
 ### PDF Generation
-`CMD+J` → **Download PDF** saves the current CV version without the print dialog. The request goes to `/api/pdf/[variant]`, which drives headless Chrome over the same page and the same `@media print` CSS, so the result matches `CMD+P`.
 
-- **`src/lib/pdf/render-resume.ts`** — the only place that holds the render settings. Both the API route and `pnpm cv:pdf` call it, so they cannot drift apart. Each setting is load-bearing and documented in the file; in particular it waits for `document.fonts.ready`, without which Chrome prints before the Inter Static faces load and silently falls back to Arial.
-- **`src/lib/pdf/browser.ts`** — one reused Chrome instance, and the `CHROME_PATH` lookup. Uses `puppeteer-core`, so it drives an installed Chrome instead of downloading a second one.
-- The route must stay `runtime = "nodejs"` and `dynamic = "force-dynamic"`.
+`CMD+J` → **Download PDF**, or the toolbar button, saves the current CV without
+the print dialog. `/api/pdf/[userId]/[cvSlug]` drives headless Chrome over the
+same page and the same `@media print` CSS.
 
-### Editing (JSON tab)
-
-`PUT /api/resumes/[variant]` overwrites a version's data file; `POST /api/resumes` creates one and registers it in `resumes.ts`. Both go through `src/lib/resume-file.ts`, which owns validation, file rendering and the registry splice.
-
-These write into the source tree, so `editingEnabled()` refuses them in production unless `CV_ENABLE_EDITING=1`. Do not remove that guard.
-
-`summary` round-trips as a string, not JSX, and `avatarUrl` is not part of the editable JSON — see the note on `EditableResume` in `src/lib/resume-json.ts`.
-
-**Font warning**: the CV body uses Tailwind's `font-serif`, which resolves to the *generic* serif family, not to a self-hosted font. The printed body is therefore whatever serif the host provides — Times on macOS. Any container must supply a serif that Chrome can embed as TrueType. The Dockerfile installs `font-liberation` for this reason; `ttf-freefont` produces a Type 3 font and corrupts the text layer for CV parsers.
+- **`src/lib/pdf/render-resume.ts`** — the only place holding the render
+  settings. Each is load-bearing and documented in the file; in particular it
+  waits for `document.fonts.ready`, without which Chrome prints before the
+  static faces load and falls back to Arial.
+- **`src/lib/pdf/browser.ts`** — one reused Chrome, plus the `CHROME_PATH` lookup.
+- The route prints over `http://127.0.0.1:$PORT`, never the request origin:
+  behind the proxy that resolved to `https://localhost:3000` and every render
+  failed with `ERR_SSL_PROTOCOL_ERROR`.
+- Both Dockerfile stages are Alpine so the native module loads at runtime.
 
 ### Deployment
-The app is optimized for Vercel deployment but can be deployed anywhere that supports Next.js applications. Docker support is included for containerized deployments.
+Kamal v2 to a shared VPS behind kamal-proxy, at buildcv.cc. See `config/deploy.yml`. The `cv_web_data` volume holds the SQLite file and must not be removed — it is the only copy of every user's CVs.

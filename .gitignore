@@ -42,3 +42,6 @@ next-env.d.ts
 /generated-cvs/
 # kamal secrets (resolved at deploy time)
 .kamal/secrets
+
+# local sqlite database
+/.data/

@@ -1,26 +1,23 @@
 import { type ResumeData, reactToString } from "@/lib/types";
 
 /**
- * The editable shape of a CV.
+ * The editable shape of a CV, and what is stored in the database.
  *
- * This is what the JSON tab shows and what the save endpoints accept, so it has
- * to round-trip. Two fields are deliberately not part of it:
+ * `summary` is the one field that changes shape: the seed files write it as
+ * JSX, and it is flattened to a string here and stored as a string. A summary
+ * that was JSX does not come back as JSX.
  *
- *  - `summary` is JSX in the data files. It is flattened to a string here, and
- *    written back as a string, which ResumeData allows. A summary that was JSX
- *    does not come back as JSX.
- *  - `avatarUrl` is a build-hashed path produced by importing the image. Editing
- *    it would be meaningless and writing it back would break on the next build,
- *    so the avatar stays in code.
+ * `avatarUrl` is a plain URL the user can set or leave empty. It used to be
+ * excluded because it was a build-hashed path from importing a bundled image;
+ * with one CV per user there is no bundled image to point at, so it is now just
+ * another editable field.
  */
-export type EditableResume = Omit<ResumeData, "summary" | "avatarUrl"> & {
+export type EditableResume = Omit<ResumeData, "summary"> & {
   summary: string;
 };
 
 export function toEditableResume(data: ResumeData): EditableResume {
-  const { summary, avatarUrl: _avatarUrl, ...rest } = data;
-
-  return { ...rest, summary: reactToString(summary) };
+  return { ...data, summary: reactToString(data.summary) };
 }
 
 export function resumeToJson(data: ResumeData): string {

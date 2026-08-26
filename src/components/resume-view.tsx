@@ -8,9 +8,8 @@ import { CommandMenu } from "@/components/command-menu";
 import { ResumeWorkspace } from "@/components/resume-workspace";
 import { SectionErrorBoundary } from "@/components/section-error-boundary";
 import { SectionSkeleton } from "@/components/section-skeleton";
-import { RESUME_VARIANTS, type ResumeVariant } from "@/data/resumes";
-import { editingEnabled } from "@/lib/editing";
-import { resumeToJson } from "@/lib/resume-json";
+import type { CvRow } from "@/lib/db/queries";
+import { type EditableResume, resumeToJson } from "@/lib/resume-json";
 import { generateResumeStructuredData } from "@/lib/structured-data";
 
 /**
@@ -21,8 +20,7 @@ import { generateResumeStructuredData } from "@/lib/structured-data";
  * rows going to the same place, and the menu keys by URL, so React warned about
  * duplicate keys. First entry wins.
  */
-function getCommandMenuLinks(variant: ResumeVariant) {
-  const { data } = variant;
+function getCommandMenuLinks(data: EditableResume) {
   const links: { url: string; title: string }[] = [];
 
   if (data.personalWebsiteUrl) {
@@ -39,12 +37,16 @@ function getCommandMenuLinks(variant: ResumeVariant) {
 }
 
 interface ResumeViewProps {
-  variant: ResumeVariant;
+  cv: CvRow;
+  /** Every CV belonging to the same user, for the "My resumes" tab. */
+  cvs: CvRow[];
+  userId: string;
+  /** True only for the owner. The API re-checks; this just shapes the UI. */
+  canEdit: boolean;
 }
 
-export function ResumeView({ variant }: ResumeViewProps) {
-  const data = variant.data;
-  const headings = variant.headings;
+export function ResumeView({ cv, cvs, userId, canEdit }: ResumeViewProps) {
+  const data = cv.data;
   const structuredData = generateResumeStructuredData(data);
 
   return (
@@ -65,10 +67,11 @@ export function ResumeView({ variant }: ResumeViewProps) {
         </div>
 
         <ResumeWorkspace
-          canEdit={editingEnabled()}
-          currentSlug={variant.slug}
+          canEdit={canEdit}
+          userId={userId}
+          currentSlug={cv.slug}
           json={resumeToJson(data)}
-          resumes={RESUME_VARIANTS.map((entry) => ({
+          resumes={cvs.map((entry) => ({
             slug: entry.slug,
             label: entry.label,
             about: entry.data.about,
@@ -88,28 +91,25 @@ export function ResumeView({ variant }: ResumeViewProps) {
               <div className="space-y-8">
                 <SectionErrorBoundary sectionName="Summary">
                   <Suspense fallback={<SectionSkeleton lines={2} />}>
-                    <Summary summary={data.summary} heading={headings?.about} />
+                    <Summary summary={data.summary} />
                   </Suspense>
                 </SectionErrorBoundary>
 
                 <SectionErrorBoundary sectionName="Work Experience">
                   <Suspense fallback={<SectionSkeleton lines={6} />}>
-                    <WorkExperience work={data.work} heading={headings?.work} />
+                    <WorkExperience work={data.work} />
                   </Suspense>
                 </SectionErrorBoundary>
 
                 <SectionErrorBoundary sectionName="Education">
                   <Suspense fallback={<SectionSkeleton lines={3} />}>
-                    <Education
-                      education={data.education}
-                      heading={headings?.education}
-                    />
+                    <Education education={data.education} />
                   </Suspense>
                 </SectionErrorBoundary>
 
                 <SectionErrorBoundary sectionName="Skills">
                   <Suspense fallback={<SectionSkeleton lines={2} />}>
-                    <Skills skills={data.skills} heading={headings?.skills} />
+                    <Skills skills={data.skills} />
                   </Suspense>
                 </SectionErrorBoundary>
               </div>
@@ -119,12 +119,10 @@ export function ResumeView({ variant }: ResumeViewProps) {
 
         <nav className="print:hidden" aria-label="Quick navigation">
           <CommandMenu
-            links={getCommandMenuLinks(variant)}
-            variants={RESUME_VARIANTS.map(({ slug, label }) => ({
-              slug,
-              label,
-            }))}
-            currentSlug={variant.slug}
+            links={getCommandMenuLinks(data)}
+            variants={cvs.map(({ slug, label }) => ({ slug, label }))}
+            currentSlug={cv.slug}
+            userId={userId}
           />
         </nav>
       </main>

@@ -36,7 +36,7 @@ function fileNameFromDisposition(disposition: string): string {
  * the download behaviour. Returns the state so each caller can render its own
  * label: the toolbar shows a spinner, the command menu shows text.
  */
-export function useCvDownload(slug: string | undefined) {
+export function useCvDownload(userId: string, slug: string | undefined) {
   const [state, setState] = React.useState<DownloadState>("idle");
 
   const download = React.useCallback(async () => {
@@ -47,7 +47,7 @@ export function useCvDownload(slug: string | undefined) {
     setState("working");
 
     try {
-      const response = await fetch(`/api/pdf/${slug}`);
+      const response = await fetch(`/api/pdf/${userId}/${slug}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -73,7 +73,7 @@ export function useCvDownload(slug: string | undefined) {
       setState("failed");
       return false;
     }
-  }, [slug, state]);
+  }, [userId, slug, state]);
 
   // Stable identity: the command menu clears the state from an effect, and a
   // fresh function each render would make that effect loop.
@@ -84,6 +84,7 @@ export function useCvDownload(slug: string | undefined) {
 
 interface DownloadCvButtonProps {
   slug: string;
+  userId: string;
 }
 
 const SUCCESS_HOLD_MS = 3000;
@@ -96,8 +97,8 @@ const SUCCESS_HOLD_MS = 3000;
  * actually arrived, then the button returns to idle. A failed download never
  * reaches "Done!" — there is nothing to celebrate.
  */
-export function DownloadCvButton({ slug }: DownloadCvButtonProps) {
-  const { state, download, reset } = useCvDownload(slug);
+export function DownloadCvButton({ slug, userId }: DownloadCvButtonProps) {
+  const { state, download, reset } = useCvDownload(userId, slug);
   const [celebrating, setCelebrating] = React.useState(false);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
 

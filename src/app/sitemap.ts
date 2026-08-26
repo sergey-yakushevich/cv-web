@@ -1,22 +1,19 @@
 import type { MetadataRoute } from "next";
-import { getVariantSlugs } from "@/data/resumes";
 
+/**
+ * Only the landing page.
+ *
+ * Individual CVs live at /:userId/:slug and are protected by nothing except the
+ * unguessability of the id. Listing them in a sitemap would hand every one of
+ * them — contact details included — straight to a crawler.
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://buildcv.cc";
-  const lastModified = new Date();
-
   return [
     {
-      url: baseUrl,
-      lastModified,
+      url: "https://buildcv.cc",
+      lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 1,
     },
-    ...getVariantSlugs().map((slug) => ({
-      url: `${baseUrl}/${slug}`,
-      lastModified,
-      changeFrequency: "monthly" as const,
-      priority: 0.5,
-    })),
   ];
 }

@@ -38,14 +38,18 @@ registry:
 
 env:
   clear:
-    # Set explicitly rather than relying on `next start`. editingEnabled() in
-    # src/lib/resume-file.ts keys off this: production refuses the endpoints
-    # that write to src/data. CV_ENABLE_EDITING must stay unset here, or the
-    # public site would let anyone rewrite the CV.
     NODE_ENV: production
     # Read by src/lib/pdf/browser.ts. The Dockerfile installs Alpine Chromium
     # at this path for the PDF route.
     CHROME_PATH: /usr/bin/chromium-browser
+    # Inside the volume mounted below, not inside the image.
+    DATABASE_PATH: /data/cv.db
+
+# Every user and every CV lives in this file. It must outlive the container:
+# without the volume, each deploy would silently start everyone from scratch.
+# Nothing else is persisted — PDFs are always rendered on demand.
+volumes:
+  - "cv_web_data:/data"
 
 # The image carries Chromium, so it is large. Building on the server would
 # compete for a disk that already runs at ~86%; build locally and push instead.

@@ -1,8 +1,4 @@
-import {
-  DEFAULT_VARIANT,
-  RESUME_VARIANTS,
-  type ResumeVariant,
-} from "@/data/resumes";
+import type { EditableResume } from "@/lib/resume-json";
 
 /** Strip anything a filesystem or a Content-Disposition header would choke on. */
 function sanitise(value: string): string {
@@ -18,41 +14,14 @@ function sanitise(value: string): string {
  *
  *   "Sergey Yakushevich — Senior Backend Engineer (Go, Ruby).pdf"
  *
- * Two versions can legitimately share a headline. They must not share a
- * filename: `pnpm cv:pdf` writes them all into generated-cvs/, so a duplicate
- * would silently overwrite the other. A shared headline therefore gets the
- * variant tag appended.
+ * Both fields are required on a CV, so the fallbacks below only bite if a
+ * record is hand-edited to empty strings.
  */
-export function resumePdfFileName(variant: ResumeVariant): string {
-  const name = sanitise(variant.data.name);
-  const headline = sanitise(variant.data.headline ?? "");
+export function resumePdfFileName(data: EditableResume): string {
+  const name = sanitise(data.name) || "CV";
+  const headline = sanitise(data.headline);
 
-  if (headline) {
-    const shared = RESUME_VARIANTS.some(
-      (other) =>
-        other.slug !== variant.slug &&
-        sanitise(other.data.headline ?? "") === headline
-    );
-
-    return shared
-      ? `${name} — ${headline} (${variantTag(variant)}).pdf`
-      : `${name} — ${headline}.pdf`;
-  }
-
-  // headline is required, so this is only reached if a file is hand-edited to
-  // an empty one. Keep the versions distinguishable rather than colliding.
-  if (variant.slug === DEFAULT_VARIANT.slug) {
-    return `${name} - CV.pdf`;
-  }
-
-  return `${name} - CV (${variantTag(variant)}).pdf`;
-}
-
-/** The last segment of the label — the part that says what this version is. */
-function variantTag(variant: ResumeVariant): string {
-  const lastSegment = variant.label.split("/").pop() ?? variant.slug;
-
-  return sanitise(lastSegment.replace(/[()]/g, "")) || variant.slug;
+  return headline ? `${name} — ${headline}.pdf` : `${name}.pdf`;
 }
 
 /**

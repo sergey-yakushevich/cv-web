@@ -1,8 +1,8 @@
 import { getBrowser } from "./browser";
 
 interface RenderOptions {
-  /** CV version slug, as in RESUME_VARIANTS. */
-  slug: string;
+  /** Page path to print, without a leading slash, e.g. "<userId>/<slug>". */
+  path: string;
   /** Origin the CV is served from, e.g. "http://localhost:3000". */
   origin: string;
 }
@@ -26,7 +26,7 @@ interface RenderOptions {
  *  - format A4        Chrome defaults to Letter, and Letter spills to 3 pages
  */
 export async function renderResumePdf({
-  slug,
+  path,
   origin,
 }: RenderOptions): Promise<Uint8Array> {
   const browser = await getBrowser();
@@ -39,7 +39,7 @@ export async function renderResumePdf({
     // of the CV from before you last edited resume-data. Always refetch.
     await page.setCacheEnabled(false);
 
-    const response = await page.goto(`${origin}/${slug}`, {
+    const response = await page.goto(`${origin}/${path}`, {
       waitUntil: "networkidle0",
       timeout: 60_000,
     });
@@ -48,7 +48,7 @@ export async function renderResumePdf({
 
     if (!response || (!response.ok() && status !== 304)) {
       throw new Error(
-        `Could not load /${slug} for printing (HTTP ${status ?? "no response"}).`
+        `Could not load /${path} for printing (HTTP ${status ?? "no response"}).`
       );
     }
 

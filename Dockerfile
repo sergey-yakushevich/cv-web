@@ -1,9 +1,18 @@
-FROM node:22.2.0-slim as BUILD_STAGE
+# Both stages are Alpine on purpose.
+#
+# The runtime reuses node_modules compiled in the build stage. That only works
+# if both stages share a libc: a native module built against glibc (node:slim)
+# will not load on musl (node:alpine). It was survivable while every dependency
+# was pure JavaScript; better-sqlite3 is not, so the stages are aligned here.
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm@8
+# Toolchain for better-sqlite3's native build. Build stage only — none of it is
+# copied into the runtime image.
+RUN apk add --no-cache python3 make g++
+
+RUN npm install -g pnpm@10.7.0
 
 COPY package.json pnpm-lock.yaml ./
 
@@ -13,30 +22,24 @@ COPY . .
 
 RUN pnpm build
 
-# Pinned to the build stage's major. The runtime reuses node_modules built
-# above, and native modules there are compiled against this Node version.
 FROM node:22-alpine
 
 WORKDIR /app
 
-# Install pnpm in production stage
-RUN npm install -g pnpm@8
+RUN npm install -g pnpm@10.7.0
 
-# Chromium for the PDF route (/api/pdf/[variant]).
+# Chromium for the PDF route.
 #
 # puppeteer-core ships no browser of its own, which is what we want here: the
 # image installs one from Alpine instead of downloading a second copy at build
 # time. nss, freetype and harfbuzz are Chromium's runtime libraries.
 #
 # font-liberation is not decoration, and it must not be swapped for the more
-# common ttf-freefont. The CV body uses Tailwind's font-serif, which resolves
-# to the generic serif family, so it is drawn with a system font rather than
-# one of the Inter faces served from /public. On macOS that generic lands on
-# Times and embeds as ordinary TrueType. With ttf-freefont it lands on
-# FreeSerif, which Chromium embeds as a Type 3 font — the same broken-text-
-# layer failure the @media print block in globals.css exists to avoid.
-# Liberation Serif embeds as TrueType and is metric-compatible with Times, so
-# the container output matches what CMD+P produces on the desktop.
+# common ttf-freefont. The CV body uses Tailwind's font-serif; if the bundled
+# Source Serif ever fails to load, the fallback is a system serif. Liberation
+# Serif embeds as ordinary TrueType, while FreeSerif embeds as a Type 3 font —
+# the broken-text-layer failure the @media print block in globals.css exists to
+# avoid.
 RUN apk add --no-cache \
       chromium \
       nss \
@@ -49,10 +52,14 @@ RUN apk add --no-cache \
 # releases, so setting it beats relying on the path search.
 ENV CHROME_PATH=/usr/bin/chromium-browser
 
-COPY --from=BUILD_STAGE /app/package.json ./package.json
-COPY --from=BUILD_STAGE /app/node_modules ./node_modules
-COPY --from=BUILD_STAGE /app/.next ./.next
-COPY --from=BUILD_STAGE /app/public ./public
+# Where the SQLite file lives. deploy.yml mounts a named volume here so the
+# data survives deploys; the image itself carries no data.
+ENV DATABASE_PATH=/data/cv.db
+
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
 
 EXPOSE 3000
 

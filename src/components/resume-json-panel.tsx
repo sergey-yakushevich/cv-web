@@ -23,6 +23,8 @@ interface ResumeJsonPanelProps {
    * controls that can only fail.
    */
   canEdit: boolean;
+  /** Owner of the CV; the save endpoints are scoped to it. */
+  userId: string;
 }
 
 const NAME_LIMIT = 50;
@@ -50,6 +52,7 @@ export function ResumeJsonPanel({
   currentSlug,
   label,
   canEdit,
+  userId,
 }: ResumeJsonPanelProps) {
   const router = useRouter();
   const [json, setJson] = useState(initialJson);
@@ -90,7 +93,7 @@ export function ResumeJsonPanel({
     setMessage(null);
 
     try {
-      const response = await fetch(`/api/resumes/${currentSlug}`, {
+      const response = await fetch(`/api/cvs/${currentSlug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: json,
@@ -116,7 +119,7 @@ export function ResumeJsonPanel({
     setMessage(null);
 
     try {
-      const response = await fetch("/api/resumes", {
+      const response = await fetch("/api/cvs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ label: newName.trim(), data: JSON.parse(json) }),
@@ -129,13 +132,13 @@ export function ResumeJsonPanel({
       setPopoverOpen(false);
       setNewName("");
       setState("idle");
-      router.push(`/${result.slug}`);
+      router.push(`/${userId}/${result.slug}`);
       router.refresh();
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "Could not create");
     }
-  }, [canSave, json, newName, router]);
+  }, [canSave, json, newName, router, userId]);
 
   return (
     <div className="overflow-hidden rounded-lg border">

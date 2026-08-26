@@ -164,12 +164,14 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
         )}
       </div>
 
-      <Avatar
-        className="size-28"
-        src={RESUME_DATA.avatarUrl}
-        alt={`${RESUME_DATA.name}'s profile picture`}
-        fallback={RESUME_DATA.initials}
-      />
+      {RESUME_DATA.avatarUrl && (
+        <Avatar
+          className="size-28"
+          src={RESUME_DATA.avatarUrl}
+          alt={`${RESUME_DATA.name}'s profile picture`}
+          fallback={RESUME_DATA.initials}
+        />
+      )}
     </header>
   );
 }

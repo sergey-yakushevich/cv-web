@@ -26,6 +26,8 @@ const ResumeJsonPanel = dynamic(
 interface ResumeWorkspaceProps {
   /** False on a deployed instance: the save endpoints are refused there. */
   canEdit: boolean;
+  /** Owner of these CVs; every link and API call is scoped to it. */
+  userId: string;
   cv: ReactNode;
   json: string;
   resumes: ResumeListEntry[];
@@ -43,6 +45,7 @@ interface ResumeWorkspaceProps {
  */
 export function ResumeWorkspace({
   canEdit,
+  userId,
   cv,
   json,
   resumes,
@@ -69,6 +72,7 @@ export function ResumeWorkspace({
           currentSlug={currentSlug}
           label={currentLabel}
           canEdit={canEdit}
+          userId={userId}
         />
       ),
     },
@@ -76,7 +80,13 @@ export function ResumeWorkspace({
       value: "resumes",
       label: "My resumes",
       icon: Layers,
-      content: <ResumeList resumes={resumes} currentSlug={currentSlug} />,
+      content: (
+        <ResumeList
+          resumes={resumes}
+          currentSlug={currentSlug}
+          userId={userId}
+        />
+      ),
     },
   ];
 
@@ -93,7 +103,7 @@ export function ResumeWorkspace({
       listClassName="print:hidden"
       listAccessory={
         <div className="print:hidden">
-          <DownloadCvButton slug={currentSlug} />
+          <DownloadCvButton slug={currentSlug} userId={userId} />
         </div>
       }
     />
