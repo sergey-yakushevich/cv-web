@@ -96,15 +96,17 @@ export function AnimatedTabs({
                 disabled={tab.disabled}
                 className={cn(
                   "relative z-0 h-9 shrink-0 gap-1.5 rounded-xl border-none bg-transparent px-3.5 text-sm font-medium shadow-none outline-none transition-colors data-[state=active]:bg-transparent data-[state=active]:shadow-none",
+                  // The base TabsTrigger sets data-[state=active]:text-foreground
+                  // at the same specificity, so this needs ! to win.
                   isActive
-                    ? "text-foreground"
+                    ? "data-[state=active]:!text-accent-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {isActive && (
                   <motion.span
                     layoutId={indicatorId}
-                    className="absolute inset-0 -z-10 rounded-xl bg-background shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_10px_-4px_rgba(0,0,0,0.15)] ring-1 ring-border"
+                    className="absolute inset-0 -z-10 rounded-xl bg-accent shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_10px_-4px_rgba(0,0,0,0.15)] ring-1 ring-accent-foreground/15"
                     transition={{
                       type: "spring",
                       stiffness: 500,

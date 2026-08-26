@@ -2,6 +2,7 @@
 
 import { Check, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export interface ResumeListEntry {
@@ -44,10 +45,13 @@ export function ResumeList({ resumes, currentSlug }: ResumeListProps) {
                     {resume.label}
                   </span>
                   {isCurrent && (
-                    <span className="flex items-center gap-1 rounded-full bg-foreground/10 px-2 py-0.5 text-[11px] font-semibold text-foreground">
+                    <Badge
+                      variant="outline"
+                      className="gap-1 border-accent-foreground/20 bg-accent text-accent-foreground"
+                    >
                       <Check className="size-3" />
                       Open
-                    </span>
+                    </Badge>
                   )}
                 </div>
                 <p className="mt-0.5 text-xs text-muted-foreground">
