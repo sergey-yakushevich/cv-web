@@ -5,17 +5,7 @@ import type { EditableResume } from "@/lib/resume-json";
 const DATA_DIR = join(process.cwd(), "src", "data");
 const REGISTRY = join(DATA_DIR, "resumes.ts");
 
-/**
- * Editing is a local authoring feature: these endpoints write into the repo's
- * own source tree. A deployed instance must never expose them, or anyone could
- * rewrite the CV. Production is refused unless the operator opts in explicitly.
- */
-export function editingEnabled(): boolean {
-  return (
-    process.env.NODE_ENV !== "production" ||
-    process.env.CV_ENABLE_EDITING === "1"
-  );
-}
+export { editingEnabled } from "@/lib/editing";
 
 /** Slugs are used to build file paths, so they get a strict allowlist. */
 export function isValidSlug(slug: string): boolean {

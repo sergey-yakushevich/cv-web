@@ -9,27 +9,33 @@ import { ResumeWorkspace } from "@/components/resume-workspace";
 import { SectionErrorBoundary } from "@/components/section-error-boundary";
 import { SectionSkeleton } from "@/components/section-skeleton";
 import { RESUME_VARIANTS, type ResumeVariant } from "@/data/resumes";
+import { editingEnabled } from "@/lib/editing";
 import { resumeToJson } from "@/lib/resume-json";
 import { generateResumeStructuredData } from "@/lib/structured-data";
 
+/**
+ * Links for the command menu, de-duplicated by URL.
+ *
+ * personalWebsiteUrl is often also listed under contact.social — "Portfolio"
+ * and "Personal Website" point at the same page today. That produced two menu
+ * rows going to the same place, and the menu keys by URL, so React warned about
+ * duplicate keys. First entry wins.
+ */
 function getCommandMenuLinks(variant: ResumeVariant) {
   const { data } = variant;
-  const links = [];
+  const links: { url: string; title: string }[] = [];
 
   if (data.personalWebsiteUrl) {
-    links.push({
-      url: data.personalWebsiteUrl,
-      title: "Personal Website",
-    });
+    links.push({ url: data.personalWebsiteUrl, title: "Personal Website" });
   }
 
-  return [
-    ...links,
-    ...data.contact.social.map((socialMediaLink) => ({
-      url: socialMediaLink.url,
-      title: socialMediaLink.name,
-    })),
-  ];
+  for (const social of data.contact.social) {
+    links.push({ url: social.url, title: social.name });
+  }
+
+  const seen = new Set<string>();
+
+  return links.filter(({ url }) => !seen.has(url) && seen.add(url));
 }
 
 interface ResumeViewProps {
@@ -59,6 +65,7 @@ export function ResumeView({ variant }: ResumeViewProps) {
         </div>
 
         <ResumeWorkspace
+          canEdit={editingEnabled()}
           currentSlug={variant.slug}
           json={resumeToJson(data)}
           resumes={RESUME_VARIANTS.map((entry) => ({

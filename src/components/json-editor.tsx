@@ -9,6 +9,8 @@ interface JsonEditorProps {
   onChange: (next: string) => void;
   maxHeight?: number;
   className?: string;
+  /** Still selectable and scrollable, just not editable. */
+  readOnly?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export function JsonEditor({
   onChange,
   maxHeight = 720,
   className,
+  readOnly = false,
 }: JsonEditorProps) {
   const [html, setHtml] = useState<string | null>(null);
   const preRef = useRef<HTMLDivElement>(null);
@@ -86,6 +89,7 @@ export function JsonEditor({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onScroll={syncScroll}
+        readOnly={readOnly}
         spellCheck={false}
         autoCapitalize="off"
         autoComplete="off"
