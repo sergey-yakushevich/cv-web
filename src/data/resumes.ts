@@ -38,7 +38,7 @@ export const RESUME_VARIANTS: ResumeVariant[] = [
     locale: "en_US",
     location: "Batumi, Georgia",
     experience: "10 years",
-    note: "Go version hardened against automated screening. Prints a job title and literal contact details, carries Go inside the Mondido dates, drops the stack from the job titles, and removes the Mondido/Moyasar overlap. Send this one through job boards and company portals; send the plain Go version when a human receives it directly.",
+    note: "Go version hardened against automated screening. Prints a job title, carries Go inside the Mondido dates, drops the stack from the job titles, and removes the Mondido/Moyasar overlap. Send this one through job boards and company portals; send the plain Go version when a human receives it directly.",
     data: enBatumi10yGoAts,
   },
   {

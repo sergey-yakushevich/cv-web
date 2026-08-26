@@ -9,8 +9,6 @@ export const RESUME_DATA: ResumeData = {
 
   headline: "Senior Backend Engineer — Go (Golang), Ruby",
 
-  atsMode: true,
-
   about:
     "Senior Backend Engineer (Go, Ruby). 10 years on payment backends, shipping Golang in production since 2024. Kafka, PostgreSQL, AWS, PCI-DSS.",
 

@@ -72,11 +72,16 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
     (s) => s.icon === "linkedin"
   );
 
-  const ats = RESUME_DATA.atsMode === true;
-
   const bareUrl = (url: string) =>
     url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
+  /*
+   * The contact line always prints literal values: the full email address, the
+   * phone number, and bare URLs. Anchor text like "Email" or "GitHub" reads
+   * fine on screen but is what actually reaches a résumé parser, because
+   * parsers read the PDF text layer and drop the link annotations behind it —
+   * so "Email" extracts as the word "Email" and the address is lost.
+   */
   const mainContactLineLinks: {
     href: string;
     text: string;
@@ -86,7 +91,7 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
   if (websiteSocial) {
     mainContactLineLinks.push({
       href: websiteSocial.url,
-      text: ats ? bareUrl(websiteSocial.url) : websiteSocial.name,
+      text: bareUrl(websiteSocial.url),
       icon: GlobeIcon,
     });
   }
@@ -94,12 +99,12 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
   if (RESUME_DATA.contact.email) {
     mainContactLineLinks.push({
       href: `mailto:${RESUME_DATA.contact.email}`,
-      text: ats ? RESUME_DATA.contact.email : "Email",
+      text: RESUME_DATA.contact.email,
       icon: MailIcon,
     });
   }
 
-  if (ats && RESUME_DATA.contact.tel) {
+  if (RESUME_DATA.contact.tel) {
     mainContactLineLinks.push({
       href: `tel:${RESUME_DATA.contact.tel}`,
       text: RESUME_DATA.contact.tel,
@@ -110,7 +115,7 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
   if (githubSocial) {
     mainContactLineLinks.push({
       href: githubSocial.url,
-      text: ats ? bareUrl(githubSocial.url) : "GitHub",
+      text: bareUrl(githubSocial.url),
       icon: GithubIcon,
     });
   }
@@ -118,7 +123,7 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
   if (linkedinSocial) {
     mainContactLineLinks.push({
       href: linkedinSocial.url,
-      text: ats ? bareUrl(linkedinSocial.url) : "LinkedIn",
+      text: bareUrl(linkedinSocial.url),
       icon: LinkedinIcon,
     });
   }

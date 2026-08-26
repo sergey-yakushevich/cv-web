@@ -13,7 +13,6 @@ export interface ResumeData {
   locationLink: string;
   about: string;
   headline?: string;
-  atsMode?: boolean;
   summary: string | React.ReactNode;
   avatarUrl: string;
   personalWebsiteUrl: string;
