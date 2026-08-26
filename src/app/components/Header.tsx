@@ -141,7 +141,7 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
           locationLink={RESUME_DATA.locationLink}
         />
 
-        {mainContactLineLinks.length > 0 && ( // Only render this div if there are links to display
+        {mainContactLineLinks.length > 0 && (
           <div className="flex flex-wrap items-center gap-x-2 text-sm font-sans text-foreground/80">
             {mainContactLineLinks.map((link, index) => (
               <React.Fragment key={link.href}>
