@@ -61,15 +61,12 @@ export function ResumeView({ variant }: ResumeViewProps) {
         <ResumeWorkspace
           currentSlug={variant.slug}
           json={resumeToJson(data)}
-          resumes={RESUME_VARIANTS.map(
-            ({ slug, label, note, location, experience }) => ({
-              slug,
-              label,
-              note,
-              location,
-              experience,
-            })
-          )}
+          resumes={RESUME_VARIANTS.map((entry) => ({
+            slug: entry.slug,
+            label: entry.label,
+            about: entry.data.about,
+            headline: entry.data.headline,
+          }))}
           cv={
             <section
               className="mx-auto w-full max-w-2xl space-y-4 bg-white "

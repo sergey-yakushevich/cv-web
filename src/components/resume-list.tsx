@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 export interface ResumeListEntry {
   slug: string;
   label: string;
-  note: string;
-  location: string;
-  experience: string;
+  /** The CV's own "about" line, used as the description. */
+  about: string;
+  /** The CV's own headline. Only some versions set one. */
+  headline?: string;
 }
 
 interface ResumeListProps {
@@ -51,11 +52,13 @@ export function ResumeList({ resumes, currentSlug }: ResumeListProps) {
                     </Badge>
                   )}
                 </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {resume.location} · {resume.experience}
-                </p>
+                {resume.headline && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {resume.headline}
+                  </p>
+                )}
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {resume.note}
+                  {resume.about}
                 </p>
               </div>
               <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
