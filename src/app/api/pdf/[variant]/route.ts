@@ -25,9 +25,18 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Unknown CV version" }, { status: 404 });
   }
 
-  // Build the origin from the incoming request so the same code works on any
-  // port, and inside Docker where the public hostname is not localhost:3000.
-  const origin = request.nextUrl.origin;
+  /*
+   * Print over loopback, not the request's own origin.
+   *
+   * Behind kamal-proxy the request arrives as HTTPS, so request.nextUrl.origin
+   * came out as "https://localhost:3000" — the forwarded scheme bolted onto the
+   * internal listen address. Chrome then tried to speak TLS to a plain HTTP
+   * port and every production render failed with ERR_SSL_PROTOCOL_ERROR.
+   *
+   * The container is fetching itself, so 127.0.0.1 on the port it listens on is
+   * both correct and independent of proxy headers, the public hostname, and DNS.
+   */
+  const origin = `http://127.0.0.1:${process.env.PORT ?? 3000}`;
 
   try {
     const pdf = await renderResumePdf({ slug: variant.slug, origin });
