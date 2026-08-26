@@ -1,0 +1,57 @@
+# Kamal v2 deploy config for the CV.
+#
+# Shares the VPS and the kamal-proxy instance with the other apps on this
+# server; routing is by host, so nothing else needs to change when this
+# deploys.
+#
+# Run from the project root:
+#   kamal setup       # first time on this server
+#   kamal deploy      # afterwards
+#   kamal logs -f
+
+service: cv_web
+
+image: sergey-yakushevich/cv-web
+
+servers:
+  web:
+    - 213.134.31.142
+
+proxy:
+  ssl: true
+  # Both DNS A records point here, so both get a Let's Encrypt certificate.
+  hosts:
+    - buildcv.cc
+    - www.buildcv.cc
+  # `next start` listens on 3000 inside the container.
+  app_port: 3000
+  healthcheck:
+    path: /up
+    interval: 3
+    timeout: 60
+
+registry:
+  server: ghcr.io
+  username: sergey-yakushevich
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  clear:
+    # Set explicitly rather than relying on `next start`. editingEnabled() in
+    # src/lib/resume-file.ts keys off this: production refuses the endpoints
+    # that write to src/data. CV_ENABLE_EDITING must stay unset here, or the
+    # public site would let anyone rewrite the CV.
+    NODE_ENV: production
+    # Read by src/lib/pdf/browser.ts. The Dockerfile installs Alpine Chromium
+    # at this path for the PDF route.
+    CHROME_PATH: /usr/bin/chromium-browser
+
+# The image carries Chromium, so it is large. Building on the server would
+# compete for a disk that already runs at ~86%; build locally and push instead.
+builder:
+  arch: amd64
+
+aliases:
+  logs: app logs -f
+  shell: app exec --interactive --reuse "sh"

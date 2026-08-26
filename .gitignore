@@ -40,3 +40,5 @@ next-env.d.ts
 
 # generated PDFs (pnpm cv:pdf)
 /generated-cvs/
+# kamal secrets (resolved at deploy time)
+.kamal/secrets
