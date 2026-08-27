@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Download, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { fireConfettiFrom } from "@/components/ui/confetti-button";
@@ -87,33 +87,28 @@ interface DownloadCvButtonProps {
   userId: string;
 }
 
-const SUCCESS_HOLD_MS = 3000;
+const FAILURE_HOLD_MS = 3000;
 
 /**
- * Toolbar download button, in three states: Download, Preparing…, Done!
+ * Toolbar download button: Download, then Preparing… while the PDF renders.
  *
- * The state follows the real request, so "Preparing…" lasts exactly as long as
- * the server takes to render the PDF. The confetti fires when the file has
- * actually arrived, then the button returns to idle. A failed download never
- * reaches "Done!" — there is nothing to celebrate.
+ * The confetti fires on the click rather than on the file arriving, so the
+ * feedback is immediate — the render takes a second or two, and a celebration
+ * that late reads as a delayed reaction. There is no success state: the browser
+ * showing the saved file is the confirmation.
  */
 export function DownloadCvButton({ slug, userId }: DownloadCvButtonProps) {
   const { state, download, reset } = useCvDownload(userId, slug);
-  const [celebrating, setCelebrating] = React.useState(false);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
 
-  const run = React.useCallback(async () => {
-    const ok = await download();
-    if (!ok) return;
-
+  const run = React.useCallback(() => {
     fireConfettiFrom(buttonRef.current);
-    setCelebrating(true);
-    setTimeout(() => setCelebrating(false), SUCCESS_HOLD_MS);
+    void download();
   }, [download]);
 
   React.useEffect(() => {
     if (state !== "failed") return;
-    const timer = setTimeout(reset, SUCCESS_HOLD_MS);
+    const timer = setTimeout(reset, FAILURE_HOLD_MS);
     return () => clearTimeout(timer);
   }, [state, reset]);
 
@@ -139,19 +134,11 @@ export function DownloadCvButton({ slug, userId }: DownloadCvButtonProps) {
     >
       {isWorking ? (
         <Loader2 className="size-4 animate-spin" />
-      ) : celebrating ? (
-        <Check className="size-4 stroke-[2.5]" />
       ) : (
         <Download className="size-4" />
       )}
       <span>
-        {isWorking
-          ? "Preparing…"
-          : celebrating
-            ? "Done!"
-            : state === "failed"
-              ? "Failed"
-              : "Download"}
+        {isWorking ? "Preparing…" : state === "failed" ? "Failed" : "Download"}
       </span>
     </Button>
   );

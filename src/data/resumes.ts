@@ -1,6 +1,6 @@
 import type { ResumeData } from "@/lib/types";
+import { RESUME_DATA as defaultCv } from "./default-cv";
 import { RESUME_DATA as enBatumi10yGo } from "./en-batumi-10y-go";
-import { RESUME_DATA as enBatumi10yGoAts } from "./en-batumi-10y-go-ats";
 import { RESUME_DATA as enBatumi10yPayments } from "./en-batumi-10y-payments";
 
 export interface ResumeVariant {
@@ -32,14 +32,14 @@ export const RESUME_VARIANTS: ResumeVariant[] = [
     data: enBatumi10yGo,
   },
   {
-    slug: "en-batumi-10y-go-ats",
-    label: "EN / Batumi / 10y / Go (ATS)",
+    slug: "backend-engineer-go",
+    label: "Backend Engineer / Go",
     lang: "en",
     locale: "en_US",
     location: "Batumi, Georgia",
     experience: "10 years",
     note: "Go version hardened against automated screening. Prints a job title, carries Go inside the Mondido dates, drops the stack from the job titles, and removes the Mondido/Moyasar overlap. Send this one through job boards and company portals; send the plain Go version when a human receives it directly.",
-    data: enBatumi10yGoAts,
+    data: defaultCv,
   },
   {
     slug: "en-batumi-10y-payments",

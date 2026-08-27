@@ -89,8 +89,10 @@ Fingerprinting was rejected deliberately: 40–80% uniqueness means collisions,
 and a collision would show one person another's CV. Do not reintroduce it as an
 identity mechanism.
 
-`src/data/*` are Sergey's real CVs and are **not** what new users get — that is
-`src/data/starter-template.ts`. Keep it that way.
+New users are seeded with `src/data/default-cv.tsx` via
+`src/data/starter-template.ts` — a real CV, contact details included. Chosen
+deliberately over a placeholder skeleton; do not "fix" it by blanking the
+contact fields without asking.
 
 ### PDF Generation
 

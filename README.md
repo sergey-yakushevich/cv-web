@@ -154,14 +154,20 @@ Note that both Dockerfile stages are Alpine on purpose: the runtime reuses
 node_modules from the build stage, and a native module built against glibc will
 not load on musl.
 
-## Your own CVs
+## The starter CV
 
-The files under `src/data` are personal résumés, not the starter template — a
-new visitor gets `src/data/starter-template.ts`, which is deliberately nobody's
-CV. Seeding strangers with a real one would hand them somebody's email, phone
-number and employment history on a public URL.
+A new visitor is seeded with a copy of `src/data/default-cv.tsx` — a real,
+finished CV rather than an empty skeleton, because it demonstrates what good
+looks like: achievement bullets with numbers, a headline that states the target
+title, badges per role.
 
-To load the real ones into an account:
+**It carries real contact details.** Every new workspace arrives with that
+person's name, email, phone number and employment history already filled in. A
+visitor who edits the name but not the rest ends up with a CV — at a public URL
+— showing somebody else's email and phone. That is the accepted trade for
+starting people from a worked example instead of placeholders.
+
+To load the other CVs in `src/data` into an account:
 
 ```bash
 pnpm dev
