@@ -37,7 +37,7 @@ export function ResumeList({ resumes, currentSlug, userId }: ResumeListProps) {
               className={cn(
                 "group flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition-colors",
                 isCurrent
-                  ? "border-foreground/20 bg-muted/60"
+                  ? "border-primary bg-card"
                   : "border-border bg-card hover:bg-muted/40"
               )}
             >

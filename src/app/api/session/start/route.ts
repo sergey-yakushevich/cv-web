@@ -37,7 +37,11 @@ export async function GET(_request: NextRequest) {
   if (existing) {
     const slug = firstCvSlug(existing);
 
-    return redirectTo(slug ? `/${existing}/${slug}` : "/");
+    // A cookie whose user has no CVs falls through and is re-minted below —
+    // sending it back to "/" would bounce straight here again, forever.
+    if (slug) {
+      return redirectTo(`/${existing}/${slug}`);
+    }
   }
 
   const userId = createUserWithStarterCv();
@@ -52,6 +56,20 @@ export async function GET(_request: NextRequest) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: USER_COOKIE_MAX_AGE,
+  });
+
+  /*
+   * Makes the CV page greet the brand-new visitor. A cookie, not a query
+   * parameter: the client router can hit this route twice while resolving the
+   * redirect from "/", and only the second hit's Location becomes the address
+   * — a ?welcome=1 put there by the first hit was lost. Short-lived, and not
+   * httpOnly so the dialog can delete it when dismissed.
+   */
+  response.cookies.set("cv_welcome", "1", {
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 300,
   });
 
   return response;

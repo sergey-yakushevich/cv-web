@@ -234,6 +234,17 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+  /*
+   * The guide sheets in edit mode extend past the content column. clip (not
+   * hidden) discards that horizontal overflow without creating a scroll
+   * container, so the page can never scroll sideways and the sticky toolbar
+   * stays pinned to the top of the viewport. On both elements: Chrome still
+   * lets the viewport scroll sideways when only the root carries it.
+   */
+  html,
+  body {
+    overflow-x: clip;
+  }
 }
 
 .print-force-new-page {
@@ -253,18 +264,137 @@
  * genuinely predicts where a page will break.
  */
 @media screen {
+  /*
+   * Guides may not move a single glyph: everything here is either an outline
+   * (no layout impact) or absolutely positioned. Sections are separated by
+   * one horizontal dashed line drawn inside the gap that already exists
+   * between them; the blocks Chrome refuses to break (one job, one degree)
+   * get a light outline. The OUTER heavy dashed boxes are not drawn here —
+   * the workspace measures the CV and overlays one box per PDF page.
+   */
   .cv-guides [aria-label="Resume Content"] > * > section,
-  .cv-guides [aria-label="Resume Content"] > * > * > section,
-  .cv-guides [aria-label="Resume Content"] header {
-    border: 2px dashed hsl(var(--guide-line));
-    border-radius: 0.5rem;
-    padding: 0.625rem 0.75rem;
-    margin: -0.75rem -0.875rem;
+  .cv-guides [aria-label="Resume Content"] > * > * > section {
+    position: relative;
+  }
+  .cv-guides [aria-label="Resume Content"] > * > section::before,
+  .cv-guides [aria-label="Resume Content"] > * > * > section::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1rem;
+    border-top: 1px dashed hsl(var(--guide-line));
+  }
+  /* The first section sits under the header, where the gap is half as tall. */
+  .cv-guides [aria-label="Resume Content"] > * > section:first-child::before,
+  .cv-guides
+    [aria-label="Resume Content"]
+    > *
+    > *
+    > section:first-child::before {
+    top: -0.5rem;
   }
 
-  .cv-guides .print-avoid-break {
-    border: 1px dashed hsl(var(--guide-line));
+  /*
+   * A job or degree block outlines itself only while the pointer is on it —
+   * and not when the pointer is really on something inside it (a bullet, a
+   * badge, a field): then only the inner thing's own outline shows.
+   */
+  .cv-guides [data-entry]:hover .print-avoid-break {
+    outline: 1px dashed hsl(var(--guide-line));
+    outline-offset: 3px;
     border-radius: 0.375rem;
+  }
+  .cv-guides
+    [data-entry]:hover:has(
+      li:hover,
+      [data-edit-path]:hover,
+      [data-edit-item]:hover,
+      [data-add-badge]:hover
+    )
+    .print-avoid-break {
+    outline: none;
+  }
+
+  /*
+   * The photo slot in the header. The element only exists when the CV has no
+   * photo, and only Guides make it visible — it shows where a picture would
+   * land, mirroring the mock's dotted circle.
+   */
+  .cv-guides .avatar-ghost {
+    display: flex;
+    border-color: hsl(var(--guide-line));
+  }
+
+  /*
+   * Guides double as the in-place editor. The workspace marks every editable
+   * element contenteditable while they are on; these rules only make that
+   * visible — a text cursor, a dashed hint on hover, a solid ring while the
+   * caret is inside. All screen-only by the enclosing @media, and .cv-guides
+   * itself never exists during a print render.
+   */
+  .cv-guides [data-edit-path],
+  .cv-guides [data-edit-item] {
+    cursor: text;
+    border-radius: 0.25rem;
+    outline-offset: 2px;
+  }
+  .cv-guides [data-edit-path]:hover,
+  .cv-guides [data-edit-item]:hover {
+    outline: 1px dashed var(--primary);
+  }
+  /*
+   * One hover zone per removable thing: hovering anywhere on the wrapper —
+   * including its "x" — outlines the editable inside, so the outline and the
+   * delete control always appear together.
+   */
+  .cv-guides li:hover > [data-edit-item],
+  .cv-guides [data-removable]:hover [data-edit-path] {
+    outline: 1px dashed var(--primary);
+  }
+  .cv-guides [data-edit-path]:focus,
+  .cv-guides [data-edit-item]:focus {
+    outline: 1.5px solid var(--primary);
+  }
+
+  /*
+   * Editing controls, rendered in the server markup but inert until Guides:
+   * the dotted "+" buttons, and the small "x" that appears over a hovered
+   * badge, bullet, contact link, job or education entry to delete it.
+   */
+  .cv-guides .add-badge {
+    display: inline-flex;
+  }
+  .cv-guides li:hover > .badge-remove,
+  .cv-guides [data-removable]:hover > .badge-remove {
+    display: inline-flex;
+  }
+  .cv-guides [data-entry]:hover > .entry-remove {
+    display: inline-flex;
+  }
+  /* "Add job" / "Add education" at the foot of their sections. */
+  .cv-guides .add-entry {
+    display: flex;
+  }
+
+  /* A freshly added, still-empty field needs something to click into. */
+  .cv-guides [data-edit-path]:empty,
+  .cv-guides [data-edit-item]:empty {
+    display: inline-block;
+    min-width: 4ch;
+    min-height: 1em;
+  }
+
+  /*
+   * The photo slot becomes a control: pointer cursor, and the "Upload photo"
+   * overlay (see Header.tsx) appears while hovered. The overlay has an opaque
+   * background, so it fully covers the current photo.
+   */
+  .cv-guides [data-avatar-slot] {
+    cursor: pointer;
+  }
+  .cv-guides [data-avatar-slot]:hover .avatar-overlay {
+    display: flex;
   }
 }
 
@@ -273,6 +403,15 @@
    * A guide must never reach paper. The class should not be present during a
    * print render at all; this is the guarantee that it cannot matter if it is.
    */
+  /*
+   * The page-gap spacers guides inject are inline styles, which print CSS
+   * cannot simply remove — so the workspace stores each element's natural
+   * margin in a custom property and this puts it back. Only matters for a
+   * manual Cmd+P while guides are on; the PDF route always loads fresh.
+   */
+  [data-page-gap] {
+    margin-top: var(--natural-margin, 0) !important;
+  }
   /*
    * Swap the variable Inter for its static faces before printing.
    *

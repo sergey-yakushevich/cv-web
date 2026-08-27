@@ -1,7 +1,7 @@
 "use client";
 
 import { ImagePlus, RotateCw, X } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 /** Rendered size of the crop circle, and the size of the image written out. */
@@ -13,6 +13,12 @@ interface AvatarUploadDialogProps {
   onClose: () => void;
   /** Receives a JPEG data URL, ready to store in the CV's avatarUrl. */
   onConfirm: (dataUrl: string) => void;
+  /**
+   * A picture already chosen before the dialog opened (the CV photo click
+   * goes straight to the file picker). Skips the drag-and-drop stage and
+   * lands directly on the crop.
+   */
+  initialImage?: string | null;
 }
 
 /**
@@ -29,6 +35,7 @@ export function AvatarUploadDialog({
   open,
   onClose,
   onConfirm,
+  initialImage,
 }: AvatarUploadDialogProps) {
   const [pending, setPending] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -36,6 +43,15 @@ export function AvatarUploadDialog({
   const [rotate, setRotate] = useState(0);
   const [dragging, setDragging] = useState(false);
   const last = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (open && initialImage) {
+      setPending(initialImage);
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+      setRotate(0);
+    }
+  }, [open, initialImage]);
 
   const reset = useCallback(() => {
     setPending(null);

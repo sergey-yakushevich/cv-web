@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { ResumeView } from "@/components/resume-view";
+import { WelcomeDialog } from "@/components/shadcn-space/dialog/dialog-07";
 import { getCv, listCvs } from "@/lib/db/queries";
 
 // Reads per-user rows, so there is nothing to pre-render.
@@ -41,7 +43,14 @@ export default function CvPage({ params }: PageProps) {
     notFound();
   }
 
+  // Set by /api/session/start when it mints a brand-new user; the dialog
+  // deletes it on dismiss, and it expires on its own regardless.
+  const showWelcome = cookies().get("cv_welcome")?.value === "1";
+
   return (
-    <ResumeView cv={cv} cvs={listCvs(params.userId)} userId={params.userId} />
+    <>
+      <ResumeView cv={cv} cvs={listCvs(params.userId)} userId={params.userId} />
+      {showWelcome && <WelcomeDialog />}
+    </>
   );
 }

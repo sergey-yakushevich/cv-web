@@ -56,10 +56,14 @@ export function ResumeView({ cv, cvs, userId }: ResumeViewProps) {
           __html: JSON.stringify(structuredData),
         }}
       />
-      <main
-        className="container relative mx-auto scroll-my-12 overflow-auto p-8"
-        id="main-content"
-      >
+      {/*
+        No padding at the top, and no overflow container: the toolbar hangs from
+        the very top of the page, and `position: sticky` resolves against the
+        nearest scrolling ancestor — an `overflow-auto` here would make that
+        this element rather than the viewport. Horizontal padding belongs to the
+        content column, which sets its own.
+      */}
+      <main className="relative min-h-screen" id="main-content">
         <div className="sr-only">
           <h1>{data.name}&apos;s Resume</h1>
         </div>

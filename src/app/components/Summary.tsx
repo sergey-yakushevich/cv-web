@@ -13,7 +13,9 @@ export function Summary({ summary, className, heading = "About" }: AboutProps) {
       <h2 className="text-xl font-bold" id="about-section">
         {heading}
       </h2>
-      <div className="font-serif text-base text-black">{summary}</div>
+      <div className="font-serif text-base text-black" data-edit-path="summary">
+        {summary}
+      </div>
     </Section>
   );
 }

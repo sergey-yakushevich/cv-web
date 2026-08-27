@@ -1,3 +1,4 @@
+import { PlusIcon, XIcon } from "lucide-react";
 import type { RESUME_DATA } from "@/data/resumes";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Section } from "../../components/ui/section";
@@ -7,25 +8,31 @@ type Education = (typeof RESUME_DATA)["education"][number];
 interface EducationPeriodProps {
   start: Education["start"];
   end: Education["end"];
+  /** JSON path of this entry, e.g. "education.0". */
+  editPathPrefix: string;
 }
 
-function EducationPeriod({ start, end }: EducationPeriodProps) {
+function EducationPeriod({ start, end, editPathPrefix }: EducationPeriodProps) {
   return (
     <div
       className="text-sm tabular-nums text-gray-800"
       title={`Period: ${start} to ${end}`}
     >
-      {start} - {end}
+      <span data-edit-path={`${editPathPrefix}.start`}>{start}</span> -{" "}
+      <span data-edit-path={`${editPathPrefix}.end`}>{end}</span>
     </div>
   );
 }
 
 interface EducationItemProps {
   education: Education;
+  /** Position of this entry in the CV's education array. */
+  index: number;
 }
 
-function EducationItem({ education }: EducationItemProps) {
+function EducationItem({ education, index }: EducationItemProps) {
   const { school, start, end, degree } = education;
+  const prefix = `education.${index}`;
 
   return (
     <Card className="print-avoid-break">
@@ -34,10 +41,11 @@ function EducationItem({ education }: EducationItemProps) {
           <h3
             className="font-semibold leading-none"
             id={`education-${school.toLowerCase().replace(/\s+/g, "-")}`}
+            data-edit-path={`${prefix}.school`}
           >
             {school}
           </h3>
-          <EducationPeriod start={start} end={end} />
+          <EducationPeriod start={start} end={end} editPathPrefix={prefix} />
         </div>
       </CardHeader>
       <CardContent
@@ -46,7 +54,7 @@ function EducationItem({ education }: EducationItemProps) {
           .toLowerCase()
           .replace(/\s+/g, "-")}`}
       >
-        {degree}
+        <span data-edit-path={`${prefix}.degree`}>{degree}</span>
       </CardContent>
     </Card>
   );
@@ -71,11 +79,34 @@ export function Education({
         role="feed"
         aria-labelledby="education-section"
       >
-        {education.map((item) => (
-          <article key={item.school}>
-            <EducationItem education={item} />
+        {education.map((item, index) => (
+          <article
+            key={item.school}
+            data-entry="education"
+            data-entry-index={index}
+            className="relative"
+          >
+            <EducationItem education={item} index={index} />
+            <button
+              type="button"
+              data-remove-entry=""
+              aria-label={`Remove ${item.school}`}
+              className="entry-remove absolute -right-3.5 -top-3.5 hidden size-5 cursor-pointer items-center justify-center rounded-full bg-[#ff343429] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
+            >
+              <XIcon className="size-3" aria-hidden="true" />
+            </button>
           </article>
         ))}
+        <div className="add-entry hidden print:hidden">
+          <button
+            type="button"
+            data-add-entry="education"
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-dashed border-muted-foreground/40 bg-transparent px-3 py-1 text-sm font-medium text-muted-foreground hover:border-primary/60 hover:text-primary"
+          >
+            <PlusIcon className="size-4" aria-hidden="true" />
+            Add education
+          </button>
+        </div>
       </div>
     </Section>
   );
