@@ -139,7 +139,7 @@ export function AvatarUploadDialog({
     // biome-ignore lint/a11y/noStaticElementInteractions: a dialog backdrop is a click target, not a control
     <div
       onClick={close}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-6"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-6 backdrop-blur-md"
       onKeyDown={(event) => {
         if (event.key === "Escape") close();
       }}

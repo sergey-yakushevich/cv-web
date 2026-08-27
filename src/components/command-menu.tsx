@@ -1,6 +1,5 @@
 "use client";
 
-import { CommandIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useCvDownload } from "@/components/download-cv-button";
@@ -13,7 +12,6 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { Button } from "./ui/button";
 
 interface Props {
   links: { url: string; title: string }[];
@@ -68,78 +66,68 @@ export const CommandMenu = ({
   }, [open, reset]);
 
   return (
-    <>
-      <Button
-        onClick={() => setOpen((open) => !open)}
-        variant="outline"
-        size="icon"
-        className="fixed bottom-4 right-4 flex rounded-full shadow-2xl xl:hidden print:hidden"
-      >
-        <CommandIcon className="my-6 size-6" />
-      </Button>
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Type a command or search..." />
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup heading="Actions">
-            {currentSlug && (
-              <CommandItem
-                value="Download PDF save resume"
-                disabled={download === "working"}
-                onSelect={downloadPdf}
-              >
-                <span>{DOWNLOAD_LABEL[download]}</span>
-              </CommandItem>
-            )}
+    <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandInput placeholder="Type a command or search..." />
+      <CommandList>
+        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandGroup heading="Actions">
+          {currentSlug && (
             <CommandItem
-              value="Print"
-              onSelect={() => {
-                setOpen(false);
-                window.print();
-              }}
+              value="Download PDF save resume"
+              disabled={download === "working"}
+              onSelect={downloadPdf}
             >
-              <span>Print</span>
+              <span>{DOWNLOAD_LABEL[download]}</span>
             </CommandItem>
-          </CommandGroup>
-          {variants.length > 0 && (
-            <CommandGroup heading="Resume versions">
-              {variants.map(({ slug, label }) => (
-                <CommandItem
-                  key={slug}
-                  value={`${label} ${slug}`}
-                  onSelect={() => {
-                    setOpen(false);
-                    router.push(`/${userId}/${slug}`);
-                  }}
-                >
-                  <span>
-                    {label}
-                    {slug === currentSlug ? " (current)" : ""}
-                  </span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
           )}
-          <CommandGroup heading="Links">
-            {links.map(({ url, title }) => (
+          <CommandItem
+            value="Print"
+            onSelect={() => {
+              setOpen(false);
+              window.print();
+            }}
+          >
+            <span>Print</span>
+          </CommandItem>
+        </CommandGroup>
+        {variants.length > 0 && (
+          <CommandGroup heading="Resume versions">
+            {variants.map(({ slug, label }) => (
               <CommandItem
-                key={url}
+                key={slug}
+                value={`${label} ${slug}`}
                 onSelect={() => {
                   setOpen(false);
-                  // "noreferrer" is load-bearing: the current URL contains the
-                  // id that grants edit access to this CV, and without it the
-                  // browser would send that whole address to the site being
-                  // opened, in its Referer header and its logs.
-                  window.open(url, "_blank", "noopener,noreferrer");
+                  router.push(`/${userId}/${slug}`);
                 }}
               >
-                <span>{title}</span>
+                <span>
+                  {label}
+                  {slug === currentSlug ? " (current)" : ""}
+                </span>
               </CommandItem>
             ))}
           </CommandGroup>
-          <CommandSeparator />
-        </CommandList>
-      </CommandDialog>
-    </>
+        )}
+        <CommandGroup heading="Links">
+          {links.map(({ url, title }) => (
+            <CommandItem
+              key={url}
+              onSelect={() => {
+                setOpen(false);
+                // "noreferrer" is load-bearing: the current URL contains the
+                // id that grants edit access to this CV, and without it the
+                // browser would send that whole address to the site being
+                // opened, in its Referer header and its logs.
+                window.open(url, "_blank", "noopener,noreferrer");
+              }}
+            >
+              <span>{title}</span>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+        <CommandSeparator />
+      </CommandList>
+    </CommandDialog>
   );
 };

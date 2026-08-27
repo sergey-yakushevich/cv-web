@@ -92,18 +92,17 @@ const FAILURE_HOLD_MS = 3000;
 /**
  * Toolbar download button: Download, then Preparing… while the PDF renders.
  *
- * The confetti fires on the click rather than on the file arriving, so the
- * feedback is immediate — the render takes a second or two, and a celebration
- * that late reads as a delayed reaction. There is no success state: the browser
- * showing the saved file is the confirmation.
+ * The confetti fires the moment Preparing… ends — when the PDF has actually
+ * arrived and the save is triggered — so the celebration and the file land
+ * together. A failed render gets no confetti.
  */
 export function DownloadCvButton({ slug, userId }: DownloadCvButtonProps) {
   const { state, download, reset } = useCvDownload(userId, slug);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
 
-  const run = React.useCallback(() => {
-    fireConfettiFrom(buttonRef.current);
-    void download();
+  const run = React.useCallback(async () => {
+    const ok = await download();
+    if (ok) fireConfettiFrom(buttonRef.current);
   }, [download]);
 
   React.useEffect(() => {

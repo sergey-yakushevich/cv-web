@@ -82,6 +82,12 @@ export function ResumeWorkspace({
    * this toggle.
    */
   const [guidesOn, setGuidesOn] = useState(false);
+  /**
+   * Controlled here rather than inside AnimatedTabs so the guides effect can
+   * re-run when the CV tab comes back: switching tabs unmounts the CV panel,
+   * which throws away the injected page gaps and the contenteditable marks.
+   */
+  const [activeTab, setActiveTab] = useState("cv");
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -118,6 +124,15 @@ export function ResumeWorkspace({
    * its own setAttribute calls.
    */
   useEffect(() => {
+    // Leaving the CV tab unmounts the panel (and with it the injected page
+    // gaps); drop the stale sheet boxes so nothing misdrawn flashes when the
+    // tab comes back and this effect rebuilds everything.
+    if (activeTab !== "cv") {
+      setPageGuides([]);
+      setTailSpace(0);
+      return;
+    }
+
     const root = cvRef.current;
     if (!root) return;
 
@@ -298,7 +313,7 @@ export function ResumeWorkspace({
       cancelAnimationFrame(frame);
       clearPageGaps();
     };
-  }, [guidesOn]);
+  }, [guidesOn, activeTab]);
 
   /** Shows the freshly cropped photo in place before it is saved. */
   const previewAvatar = useCallback((dataUrl: string) => {
@@ -729,7 +744,15 @@ export function ResumeWorkspace({
     <>
       <AnimatedTabs
         tabs={tabs}
-        defaultValue="cv"
+        value={activeTab}
+        onValueChange={(next) => {
+          // Unmounting the CV panel discards any unsaved in-place edits.
+          if (next !== "cv" && dirty) {
+            setDirty(false);
+            setPendingAvatar(null);
+          }
+          setActiveTab(next);
+        }}
         // print:block drops the flex column so its gap-4 does not push the CV
         // down the printed page; print:overflow-visible stops the panel wrapper
         // clipping the CV where it breaks across sheets.
