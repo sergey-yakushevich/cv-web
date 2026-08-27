@@ -40,7 +40,7 @@ function SkillsList({ skills, className }: SkillsListProps) {
             type="button"
             data-remove-badge=""
             aria-label={`Remove ${skill}`}
-            className="badge-remove absolute -right-3 -top-3 hidden size-4 cursor-pointer items-center justify-center rounded-full bg-[#ff343429] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
+            className="badge-remove absolute -right-3 -top-3 hidden size-4 cursor-pointer items-center justify-center rounded-full bg-[#ffdede] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
           >
             <XIcon className="size-2.5" aria-hidden="true" />
           </button>
@@ -51,7 +51,7 @@ function SkillsList({ skills, className }: SkillsListProps) {
           type="button"
           data-add-badge=""
           aria-label="Add a skill"
-          className="inline-flex cursor-pointer items-center rounded-md border border-dashed border-muted-foreground/40 bg-transparent px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:border-primary/60 hover:text-primary"
+          className="inline-flex h-[22px] cursor-pointer items-center rounded-md border border-dashed border-muted-foreground/40 bg-transparent px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:border-primary/60 hover:text-primary"
         >
           <PlusIcon className="size-4" aria-hidden="true" />
         </button>

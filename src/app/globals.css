@@ -317,6 +317,16 @@
     .print-avoid-break {
     outline: none;
   }
+  /* ...and the block's own delete control steps back with its outline. */
+  .cv-guides [data-entry]:hover:has(
+      li:hover,
+      [data-edit-path]:hover,
+      [data-edit-item]:hover,
+      [data-add-badge]:hover
+    )
+    > .entry-remove {
+    display: none;
+  }
 
   /*
    * The photo slot in the header. The element only exists when the CV has no

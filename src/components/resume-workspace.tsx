@@ -761,7 +761,7 @@ export function ResumeWorkspace({
         // The bar is wider than the content column, so the wrapper spans the
         // viewport and the row itself is the fixed-width bar.
         rowWrapperClassName="sticky top-0 z-50 flex justify-center print:hidden"
-        rowClassName="w-[700px] max-w-[calc(100%-2rem)] justify-center rounded-b-2xl border border-t-0 border-border bg-background/90 px-4 pb-3.5 pt-3 shadow-[0_1px_3px_0_hsl(0_0%_0%/0.05),0_6px_16px_-8px_hsl(0_0%_0%/0.12)] backdrop-blur"
+        rowClassName="w-[700px] max-w-[calc(100%-2rem)] justify-center rounded-b-2xl border border-t-0 border-border bg-background px-4 pb-3.5 pt-3 shadow-[0_1px_3px_0_hsl(0_0%_0%/0.05),0_6px_16px_-8px_hsl(0_0%_0%/0.12)]"
         listAccessory={
           <>
             <DownloadCvButton slug={currentSlug} userId={userId} />

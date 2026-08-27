@@ -91,7 +91,7 @@ export function Education({
               type="button"
               data-remove-entry=""
               aria-label={`Remove ${item.school}`}
-              className="entry-remove absolute -right-3.5 -top-3.5 hidden size-5 cursor-pointer items-center justify-center rounded-full bg-[#ff343429] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
+              className="entry-remove absolute -right-3.5 -top-3.5 hidden size-5 cursor-pointer items-center justify-center rounded-full bg-[#ffdede] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
             >
               <XIcon className="size-3" aria-hidden="true" />
             </button>

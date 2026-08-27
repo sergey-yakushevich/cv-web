@@ -202,7 +202,7 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
                   type="button"
                   data-remove-badge=""
                   aria-label={`Remove ${link.text}`}
-                  className="badge-remove absolute -right-3 -top-3 hidden size-4 cursor-pointer items-center justify-center rounded-full bg-[#ff343429] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
+                  className="badge-remove absolute -right-3 -top-3 hidden size-4 cursor-pointer items-center justify-center rounded-full bg-[#ffdede] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
                 >
                   <XIcon className="size-2.5" aria-hidden="true" />
                 </button>

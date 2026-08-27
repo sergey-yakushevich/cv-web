@@ -42,7 +42,7 @@ function BadgeList({ className, badges, editPathPrefix }: BadgeListProps) {
             type="button"
             data-remove-badge=""
             aria-label={`Remove ${badge}`}
-            className="badge-remove absolute -right-3 -top-3 hidden size-4 cursor-pointer items-center justify-center rounded-full bg-[#ff343429] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
+            className="badge-remove absolute -right-3 -top-3 hidden size-4 cursor-pointer items-center justify-center rounded-full bg-[#ffdede] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
           >
             <XIcon className="size-2.5" aria-hidden="true" />
           </button>
@@ -53,7 +53,7 @@ function BadgeList({ className, badges, editPathPrefix }: BadgeListProps) {
           type="button"
           data-add-badge=""
           aria-label="Add a badge"
-          className="inline-flex cursor-pointer items-center rounded-md border border-dashed border-muted-foreground/40 bg-transparent px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:border-primary/60 hover:text-primary"
+          className="inline-flex h-[22px] cursor-pointer items-center rounded-md border border-dashed border-muted-foreground/40 bg-transparent px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:border-primary/60 hover:text-primary"
         >
           <PlusIcon className="size-4" aria-hidden="true" />
         </button>
@@ -160,7 +160,7 @@ function WorkExperienceItem({ work, index }: WorkExperienceItemProps) {
                 type="button"
                 data-remove-badge=""
                 aria-label="Remove this point"
-                className="badge-remove absolute -right-3 -top-3 hidden size-4 cursor-pointer items-center justify-center rounded-full bg-[#ff343429] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
+                className="badge-remove absolute -right-3 -top-3 hidden size-4 cursor-pointer items-center justify-center rounded-full bg-[#ffdede] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
               >
                 <XIcon className="size-2.5" aria-hidden="true" />
               </button>
@@ -171,7 +171,7 @@ function WorkExperienceItem({ work, index }: WorkExperienceItemProps) {
               type="button"
               data-add-badge=""
               aria-label="Add a point"
-              className="inline-flex w-full cursor-pointer items-center justify-center rounded-md border border-dashed border-muted-foreground/40 bg-transparent px-2.5 py-0.5 font-sans text-xs font-semibold text-muted-foreground hover:border-primary/60 hover:text-primary"
+              className="inline-flex h-[22px] w-full cursor-pointer items-center justify-center rounded-md border border-dashed border-muted-foreground/40 bg-transparent px-2.5 py-0.5 font-sans text-xs font-semibold text-muted-foreground hover:border-primary/60 hover:text-primary"
             >
               <PlusIcon className="size-4" aria-hidden="true" />
             </button>
@@ -210,7 +210,7 @@ export function WorkExperience({
               type="button"
               data-remove-entry=""
               aria-label={`Remove the ${item.company} job`}
-              className="entry-remove absolute -right-3.5 -top-3.5 hidden size-5 cursor-pointer items-center justify-center rounded-full bg-[#ff343429] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
+              className="entry-remove absolute -right-3.5 -top-3.5 hidden size-5 cursor-pointer items-center justify-center rounded-full bg-[#ffdede] text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground print:hidden"
             >
               <XIcon className="size-3" aria-hidden="true" />
             </button>

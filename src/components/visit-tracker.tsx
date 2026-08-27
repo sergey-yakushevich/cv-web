@@ -157,7 +157,10 @@ async function sendEvent(event: EventFields): Promise<void> {
 }
 
 /** Fire-and-forget action event (never awaited by callers). */
-function track(name: string, opts: { label?: string; meta?: Record<string, unknown> } = {}): void {
+function track(
+  name: string,
+  opts: { label?: string; meta?: Record<string, unknown> } = {}
+): void {
   void sendEvent({ name, label: opts.label, meta: opts.meta });
 }
 
@@ -205,7 +208,12 @@ function trackPageView(rawPath: string): void {
 
   closePageView();
 
-  const view: OpenPageView = { id: uuid(), path, activeMs: 0, resumedAt: Date.now() };
+  const view: OpenPageView = {
+    id: uuid(),
+    path,
+    activeMs: 0,
+    resumedAt: Date.now(),
+  };
   openPageView = view;
 
   void sendEvent({ id: view.id, name: "page_view", path });
@@ -237,13 +245,14 @@ function installActions(): void {
     (event) => {
       const target = event.target as HTMLElement | null;
       const el = target?.closest<HTMLElement>("button, a, [role='button']");
-      if (!el || el.closest("[contenteditable='true'], [data-track-ignore]")) return;
+      if (!el || el.closest("[contenteditable='true'], [data-track-ignore]"))
+        return;
 
       const label = controlLabel(el);
       if (!label) return;
       track("button_click", { label });
     },
-    true,
+    true
   );
 
   // File chooser (the avatar upload dialog).
@@ -258,15 +267,24 @@ function installActions(): void {
         meta: { size: file.size, type: file.type, count: el.files.length },
       });
     },
-    true,
+    true
   );
 
   // Save and download both go through fetch; wrap it once so they are caught
   // however they were triggered (button, command menu, keyboard).
   const originalFetch = window.fetch.bind(window);
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    const method = (init?.method || (input instanceof Request ? input.method : "GET") || "GET").toUpperCase();
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.href
+          : input.url;
+    const method = (
+      init?.method ||
+      (input instanceof Request ? input.method : "GET") ||
+      "GET"
+    ).toUpperCase();
     const response = await originalFetch(input as RequestInfo, init);
     try {
       if (response.ok && url) {

@@ -37,6 +37,76 @@
   animation-iteration-count: infinite;
 }
 
+/*
+ * The mascot's idle motion, borrowed from dawn's onboarding screen: a slow
+ * bob with a slight sway, a soft blurred halo behind it, and a few sparks
+ * twinkling around.
+ */
+.dialog-07-mascot {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.dialog-07-mascot::before {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  filter: blur(24px);
+  background: radial-gradient(circle, rgba(50, 128, 255, 0.3), transparent 68%);
+}
+.dialog-07-mascot img {
+  position: relative;
+  animation: dialog-07-bob 5.5s ease-in-out infinite;
+  filter: drop-shadow(0 8px 18px rgba(8, 48, 160, 0.22));
+}
+@keyframes dialog-07-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+}
+.dialog-07-spark {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f87171;
+  box-shadow: 0 0 9px #f87171;
+  animation: dialog-07-twinkle 3s ease-in-out infinite;
+}
+.dialog-07-spark:nth-of-type(1) {
+  top: 6%;
+  right: -4%;
+  animation-delay: 0.4s;
+}
+.dialog-07-spark:nth-of-type(2) {
+  bottom: 10%;
+  left: -8%;
+  animation-delay: 1.3s;
+}
+.dialog-07-spark:nth-of-type(3) {
+  top: 30%;
+  left: -14%;
+  background: #3280ff;
+  box-shadow: 0 0 9px #3280ff;
+  animation-delay: 2.1s;
+}
+@keyframes dialog-07-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
 .dialog-07-bubble-warm {
   animation-name: dialog-07-bubble-right;
 }

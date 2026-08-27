@@ -107,7 +107,10 @@ export function WelcomeDialog() {
             ))}
           </div>
 
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="dialog-07-mascot absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <span className="dialog-07-spark" />
+            <span className="dialog-07-spark" />
+            <span className="dialog-07-spark" />
             <Image
               src="/mascot.png"
               alt=""
