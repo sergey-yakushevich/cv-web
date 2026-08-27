@@ -1,14 +1,16 @@
 "use client";
 
-import { Braces, FileText, Layers } from "lucide-react";
+import { Braces, FileText, Frame, Layers } from "lucide-react";
 import dynamic from "next/dynamic";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { DownloadCvButton } from "@/components/download-cv-button";
 import { ResumeList, type ResumeListEntry } from "@/components/resume-list";
 import {
   type AnimatedTabItem,
   AnimatedTabs,
 } from "@/components/shadcn-space/tabs/tabs-08";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const ResumeJsonPanel = dynamic(
   () =>
@@ -51,12 +53,29 @@ export function ResumeWorkspace({
   const currentLabel =
     resumes.find((entry) => entry.slug === currentSlug)?.label ?? currentSlug;
 
+  /*
+   * Guides draw the print layout on screen — dashed outlines around each block
+   * that Chrome will try to keep on one sheet. They are screen-only twice over:
+   * off by default, and the PDF is rendered from a fresh page load that never
+   * runs this toggle.
+   */
+  const [guidesOn, setGuidesOn] = useState(false);
+
   const tabs: AnimatedTabItem[] = [
     {
       value: "cv",
       label: "CV",
       icon: FileText,
-      content: <div className="print-passthrough">{cv}</div>,
+      content: (
+        <div className={cn("print-passthrough", guidesOn && "cv-guides")}>
+          {cv}
+          <div className="mt-2 flex justify-center print:hidden">
+            <span className="rounded-full border border-dashed border-muted-foreground/30 px-3 py-1 font-mono text-[11px] text-muted-foreground/70">
+              dotted lines show print layout — they never reach the PDF
+            </span>
+          </div>
+        </div>
+      ),
     },
     {
       value: "json",
@@ -93,14 +112,32 @@ export function ResumeWorkspace({
       // print:block drops the flex column so its gap-4 does not push the CV
       // down the printed page; print:overflow-visible stops the panel wrapper
       // clipping the CV where it breaks across sheets.
-      className="mx-auto max-w-2xl print:block print:max-w-none"
-      contentClassName="print:overflow-visible"
-      rowClassName="justify-center print:hidden"
-      listClassName="print:hidden"
+      className="print:block"
+      contentClassName="mx-auto w-full max-w-2xl px-4 pb-16 print:max-w-none print:overflow-visible print:px-0 print:pb-0"
+      // The bar is wider than the content column, so the wrapper spans the
+      // viewport and the row itself is the fixed-width bar.
+      rowWrapperClassName="sticky top-0 z-50 flex justify-center print:hidden"
+      rowClassName="w-[700px] max-w-[calc(100%-2rem)] justify-center rounded-b-2xl border border-t-0 border-border bg-background/90 px-4 pb-3.5 pt-3 shadow-[0_1px_3px_0_hsl(0_0%_0%/0.05),0_6px_16px_-8px_hsl(0_0%_0%/0.12)] backdrop-blur"
       listAccessory={
-        <div className="print:hidden">
+        <>
           <DownloadCvButton slug={currentSlug} userId={userId} />
-        </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setGuidesOn((on) => !on)}
+            aria-pressed={guidesOn}
+            title="Show how the CV will render"
+            className={cn(
+              "h-11 shrink-0 gap-1.5 rounded-2xl px-3.5 text-sm font-medium shadow-none",
+              guidesOn
+                ? "border-dashed border-primary bg-accent text-accent-foreground hover:bg-accent"
+                : "border-border bg-muted/40 hover:bg-muted"
+            )}
+          >
+            <Frame className="size-4" />
+            <span>Guides</span>
+          </Button>
+        </>
       }
     />
   );

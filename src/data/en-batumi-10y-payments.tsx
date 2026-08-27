@@ -1,4 +1,3 @@
-import avatar from "@/images/avatar.jpg";
 import type { ResumeData } from "@/lib/types";
 
 export const RESUME_DATA: ResumeData = {
@@ -23,7 +22,7 @@ export const RESUME_DATA: ResumeData = {
       production.
     </>
   ),
-  avatarUrl: avatar.src,
+  avatarUrl: "/default-avatar.jpg",
   personalWebsiteUrl: "https://syakushevich.github.io/portfolio",
   contact: {
     email: "sergeyayya@gmail.com",

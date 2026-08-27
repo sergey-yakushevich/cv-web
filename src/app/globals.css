@@ -36,6 +36,7 @@
     --sidebar-accent-foreground: #0830a0;
     --sidebar-border: #e4e7ec;
     --sidebar-ring: #3280ff;
+    --guide-line: 220 14% 86%;
     --font-sans: Inter, sans-serif;
     --font-serif: "Source Serif 4", serif;
     --font-mono: JetBrains Mono, monospace;
@@ -96,6 +97,7 @@
     --sidebar-accent-foreground: #bedbff;
     --sidebar-border: #404040;
     --sidebar-ring: #3280ff;
+    --guide-line: 220 8% 38%;
     --font-sans: Inter, sans-serif;
     --font-serif: "Source Serif 4", serif;
     --font-mono: JetBrains Mono, monospace;
@@ -238,7 +240,39 @@
   page-break-before: always;
 }
 
+/*
+ * Guides: the print layout drawn on screen, toggled from the toolbar.
+ *
+ * Wrapped in @media screen so a guide cannot reach paper even in principle —
+ * the rules simply do not exist when printing. (The toggle is also off on a
+ * fresh page load, which is what the PDF renders, so this is the second lock.)
+ *
+ * The outlines sit on the header and on each section. The blocks Chrome
+ * actually refuses to split are the ones marked .print-avoid-break — one job,
+ * one degree — so those get their own lighter outline, which is the part that
+ * genuinely predicts where a page will break.
+ */
+@media screen {
+  .cv-guides [aria-label="Resume Content"] > * > section,
+  .cv-guides [aria-label="Resume Content"] > * > * > section,
+  .cv-guides [aria-label="Resume Content"] header {
+    border: 2px dashed hsl(var(--guide-line));
+    border-radius: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    margin: -0.75rem -0.875rem;
+  }
+
+  .cv-guides .print-avoid-break {
+    border: 1px dashed hsl(var(--guide-line));
+    border-radius: 0.375rem;
+  }
+}
+
 @media print {
+  /*
+   * A guide must never reach paper. The class should not be present during a
+   * print render at all; this is the guarantee that it cannot matter if it is.
+   */
   /*
    * Swap the variable Inter for its static faces before printing.
    *

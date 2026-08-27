@@ -1,4 +1,3 @@
-import avatar from "@/images/avatar.jpg";
 import type { ResumeData } from "@/lib/types";
 
 export const RESUME_DATA: ResumeData = {
@@ -25,7 +24,11 @@ export const RESUME_DATA: ResumeData = {
       am looking for backend roles in Go or Ruby.
     </>
   ),
-  avatarUrl: avatar.src,
+  // A stable /public path, not an imported image. The import resolves to a
+  // build-hashed URL like /_next/static/media/avatar.39c1ef82.jpg, and this
+  // value is copied into every new user's row — so the next build would change
+  // the hash and 404 every avatar already stored.
+  avatarUrl: "/default-avatar.jpg",
   personalWebsiteUrl: "https://cyberjosef.dev",
   contact: {
     email: "sergeyayya@gmail.com",

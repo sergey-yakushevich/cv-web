@@ -42,6 +42,12 @@ interface AnimatedTabsProps {
   indicatorId?: string;
   /** The flex row holding the tab list and the accessory. */
   rowClassName?: string;
+  /**
+   * Wraps that row. Kept separate from rowClassName so the row can be a fixed
+   * width bar while its wrapper spans the viewport — which is what lets the
+   * toolbar be wider than the content column and still sit centred.
+   */
+  rowWrapperClassName?: string;
   /** Rendered on the same row as the tab list, after it. */
   listAccessory?: ReactNode;
 }
@@ -56,6 +62,7 @@ export function AnimatedTabs({
   contentClassName,
   indicatorId = "animated-tabs-indicator",
   rowClassName,
+  rowWrapperClassName,
   listAccessory,
 }: AnimatedTabsProps) {
   const [internalValue, setInternalValue] = useState(
@@ -79,81 +86,83 @@ export function AnimatedTabs({
       onValueChange={handleChange}
       className={cn("flex w-full flex-col gap-4", className)}
     >
-      <div className={cn("flex w-full items-center gap-2", rowClassName)}>
-        <TabsList
-          className={cn(
-            "no-scrollbar !h-auto w-auto gap-1 overflow-x-auto rounded-2xl border border-border bg-muted/40 p-1",
-            listClassName
-          )}
-        >
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = tab.value === value;
-            return (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                disabled={tab.disabled}
-                className={cn(
-                  "relative z-0 h-9 shrink-0 gap-1.5 rounded-xl border-none bg-transparent px-3.5 text-sm font-medium shadow-none outline-none transition-colors data-[state=active]:bg-transparent data-[state=active]:shadow-none",
-                  // The base TabsTrigger sets data-[state=active]:text-foreground
-                  // at the same specificity, so this needs ! to win.
-                  isActive
-                    ? "data-[state=active]:!text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {isActive && (
-                  <motion.span
-                    layoutId={indicatorId}
-                    className="absolute inset-0 -z-10 rounded-xl bg-accent shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_10px_-4px_rgba(0,0,0,0.15)] ring-1 ring-accent-foreground/15"
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 34,
-                      mass: 0.9,
-                    }}
-                  />
-                )}
-                <motion.span
-                  key={isActive ? "active" : "inactive"}
-                  initial={isActive ? { scale: 0.85 } : false}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                  className="flex items-center gap-1.5"
+      <div className={rowWrapperClassName}>
+        <div className={cn("flex items-center gap-2", rowClassName)}>
+          <TabsList
+            className={cn(
+              "no-scrollbar !h-auto w-auto gap-1 overflow-x-auto rounded-2xl border border-border bg-muted/40 p-1",
+              listClassName
+            )}
+          >
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = tab.value === value;
+              return (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  disabled={tab.disabled}
+                  className={cn(
+                    "relative z-0 h-9 shrink-0 gap-1.5 rounded-xl border-none bg-transparent px-3.5 text-sm font-medium shadow-none outline-none transition-colors data-[state=active]:bg-transparent data-[state=active]:shadow-none",
+                    // The base TabsTrigger sets data-[state=active]:text-foreground
+                    // at the same specificity, so this needs ! to win.
+                    isActive
+                      ? "data-[state=active]:!text-accent-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  {Icon && <Icon className="size-4" />}
-                  <span>{tab.label}</span>
-                </motion.span>
-                {tab.badge !== undefined && (
-                  <AnimatePresence mode="popLayout" initial={false}>
+                  {isActive && (
                     <motion.span
-                      key={tab.badge}
-                      initial={{ opacity: 0, scale: 0.5, y: -6 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.5, y: 6 }}
+                      layoutId={indicatorId}
+                      className="absolute inset-0 -z-10 rounded-xl bg-accent shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_10px_-4px_rgba(0,0,0,0.15)] ring-1 ring-accent-foreground/15"
                       transition={{
                         type: "spring",
                         stiffness: 500,
-                        damping: 25,
+                        damping: 34,
+                        mass: 0.9,
                       }}
-                      className={cn(
-                        "flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums transition-colors",
-                        isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted-foreground/15 text-muted-foreground"
-                      )}
-                    >
-                      {tab.badge}
-                    </motion.span>
-                  </AnimatePresence>
-                )}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
+                    />
+                  )}
+                  <motion.span
+                    key={isActive ? "active" : "inactive"}
+                    initial={isActive ? { scale: 0.85 } : false}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                    className="flex items-center gap-1.5"
+                  >
+                    {Icon && <Icon className="size-4" />}
+                    <span>{tab.label}</span>
+                  </motion.span>
+                  {tab.badge !== undefined && (
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      <motion.span
+                        key={tab.badge}
+                        initial={{ opacity: 0, scale: 0.5, y: -6 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.5, y: 6 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 25,
+                        }}
+                        className={cn(
+                          "flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums transition-colors",
+                          isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted-foreground/15 text-muted-foreground"
+                        )}
+                      >
+                        {tab.badge}
+                      </motion.span>
+                    </AnimatePresence>
+                  )}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
 
-        {listAccessory}
+          {listAccessory}
+        </div>
       </div>
 
       <div className={cn("relative", contentClassName)}>

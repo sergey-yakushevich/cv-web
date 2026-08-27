@@ -1,8 +1,9 @@
 "use client";
 
-import { Check, Copy, Loader2, Save } from "lucide-react";
+import { Check, Copy, ImagePlus, Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
+import { AvatarUploadDialog } from "@/components/avatar-upload-dialog";
 import { JsonEditor } from "@/components/json-editor";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,32 @@ interface ResumeJsonPanelProps {
 }
 
 const NAME_LIMIT = 50;
+
+/*
+ * A cropped photo is a ~60KB data URL. Dumping that into the editor would bury
+ * the CV under one unreadable line and invite someone to mangle it by hand, so
+ * the editor shows this placeholder instead and the real value is put back on
+ * save. Only data URLs are hidden — an ordinary path like /default-avatar.jpg
+ * is short, meaningful and stays editable.
+ */
+const AVATAR_PLACEHOLDER = "(uploaded image)";
+
+const isDataUrl = (value: unknown): value is string =>
+  typeof value === "string" && value.startsWith("data:");
+
+/** Swaps a data-URL avatar for the placeholder, and reports what it hid. */
+function hideAvatar(json: string): { text: string; hidden: string | null } {
+  try {
+    const parsed = JSON.parse(json);
+    if (!isDataUrl(parsed?.avatarUrl)) return { text: json, hidden: null };
+
+    const hidden = parsed.avatarUrl;
+    parsed.avatarUrl = AVATAR_PLACEHOLDER;
+    return { text: JSON.stringify(parsed, null, 2), hidden };
+  } catch {
+    return { text: json, hidden: null };
+  }
+}
 
 function truncate(value: string): string {
   return value.length > NAME_LIMIT
@@ -48,14 +75,18 @@ export function ResumeJsonPanel({
   userId,
 }: ResumeJsonPanelProps) {
   const router = useRouter();
-  const [json, setJson] = useState(initialJson);
+  const initial = useMemo(() => hideAvatar(initialJson), [initialJson]);
+  const [json, setJson] = useState(initial.text);
+  const [avatar, setAvatar] = useState<string | null>(initial.hidden);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [state, setState] = useState<SaveState>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [newName, setNewName] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
 
-  const isDirty = json !== initialJson;
+  // The photo can change without the text changing, so both count as edits.
+  const isDirty = json !== initial.text || avatar !== initial.hidden;
 
   // Parsing on every keystroke is cheap next to re-highlighting, and it gives
   // the buttons an honest disabled state: unparseable JSON can never be saved.
@@ -68,6 +99,15 @@ export function ResumeJsonPanel({
       return error instanceof Error ? error.message : "Invalid JSON";
     }
   }, [json, isDirty]);
+
+  /** The JSON as it should be stored: placeholder swapped back for the photo. */
+  const payload = useCallback(() => {
+    const parsed = JSON.parse(json);
+    if (parsed?.avatarUrl === AVATAR_PLACEHOLDER) {
+      parsed.avatarUrl = avatar ?? "";
+    }
+    return parsed;
+  }, [json, avatar]);
 
   const canSave = isDirty && !parseError && state !== "saving";
 
@@ -89,7 +129,7 @@ export function ResumeJsonPanel({
       const response = await fetch(`/api/cvs/${userId}/${currentSlug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: json,
+        body: JSON.stringify(payload()),
       });
       const result = await response.json();
 
@@ -103,7 +143,7 @@ export function ResumeJsonPanel({
       setState("error");
       setMessage(error instanceof Error ? error.message : "Could not save");
     }
-  }, [canSave, currentSlug, json, router, userId]);
+  }, [canSave, currentSlug, payload, router, userId]);
 
   const saveAsNew = useCallback(async () => {
     if (!canSave || !newName.trim()) return;
@@ -115,7 +155,7 @@ export function ResumeJsonPanel({
       const response = await fetch(`/api/cvs/${userId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: newName.trim(), data: JSON.parse(json) }),
+        body: JSON.stringify({ label: newName.trim(), data: payload() }),
       });
       const result = await response.json();
 
@@ -131,7 +171,7 @@ export function ResumeJsonPanel({
       setState("error");
       setMessage(error instanceof Error ? error.message : "Could not create");
     }
-  }, [canSave, json, newName, router, userId]);
+  }, [canSave, payload, newName, router, userId]);
 
   return (
     <div className="overflow-hidden rounded-lg border">
@@ -200,6 +240,17 @@ export function ResumeJsonPanel({
             </PopoverContent>
           </Popover>
 
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setUploadOpen(true)}
+            className="h-8 gap-1.5"
+          >
+            <ImagePlus className="size-3.5" />
+            {avatar ? "Change photo" : "Add photo"}
+          </Button>
+
           {(parseError || message) && (
             <span
               className={
@@ -237,6 +288,25 @@ export function ResumeJsonPanel({
           )}
         </Button>
       </div>
+
+      <AvatarUploadDialog
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        onConfirm={(dataUrl) => {
+          setAvatar(dataUrl);
+          // Keep the editor readable: the JSON records that a photo exists,
+          // and save() puts the real data URL back.
+          setJson((current) => {
+            try {
+              const parsed = JSON.parse(current);
+              parsed.avatarUrl = AVATAR_PLACEHOLDER;
+              return JSON.stringify(parsed, null, 2);
+            } catch {
+              return current;
+            }
+          });
+        }}
+      />
 
       <JsonEditor value={json} onChange={setJson} maxHeight={720} />
     </div>
