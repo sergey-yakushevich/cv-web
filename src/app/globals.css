@@ -244,6 +244,8 @@
   html,
   body {
     overflow-x: clip;
+    /* No rubber-band bounce: the toolbar stays glued to the top edge. */
+    overscroll-behavior-y: none;
   }
 }
 

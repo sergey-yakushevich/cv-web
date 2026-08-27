@@ -42,6 +42,8 @@ export function AvatarUploadDialog({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [rotate, setRotate] = useState(0);
   const [dragging, setDragging] = useState(false);
+  /** Natural size of the pending image, for the cover-fit preview. */
+  const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
   const last = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export function AvatarUploadDialog({
 
   const reset = useCallback(() => {
     setPending(null);
+    setNatural(null);
     setZoom(1);
     setPan({ x: 0, y: 0 });
     setRotate(0);
@@ -111,6 +114,10 @@ export function AvatarUploadDialog({
         const upscale = OUTPUT / VIEW;
         const cover = Math.max(VIEW / image.width, VIEW / image.height);
 
+        // A transparent PNG would otherwise come out black in JPEG.
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, OUTPUT, OUTPUT);
+
         ctx.translate(
           OUTPUT / 2 + pan.x * upscale,
           OUTPUT / 2 + pan.y * upscale
@@ -163,7 +170,7 @@ export function AvatarUploadDialog({
           <div className="mx-auto w-[300px]">
             {/* biome-ignore lint/a11y/noStaticElementInteractions: dragging to pan is the interaction; the sliders below give the same control from a keyboard */}
             <div
-              className="relative size-[300px] overflow-hidden rounded-full bg-secondary"
+              className="relative size-[300px] overflow-hidden rounded-[32px] bg-secondary"
               style={{
                 cursor: dragging ? "grabbing" : "grab",
                 touchAction: "none",
@@ -188,13 +195,37 @@ export function AvatarUploadDialog({
                 );
               }}
             >
+              {/*
+                Rendered at its cover-fitted size explicitly, whole image
+                visible. The old min-w/min-h sizing let a large image render
+                at its natural size, so the preview did not match the canvas
+                replay (which always assumes cover fit) and the crop came out
+                zoomed differently than shown.
+              */}
               {/* biome-ignore lint/performance/noImgElement: a data URL cannot be optimised by next/image */}
               <img
+                key={pending}
                 src={pending}
                 alt=""
                 draggable={false}
-                className="absolute left-1/2 top-1/2 min-h-full min-w-full max-w-none object-cover"
+                onLoad={(event) =>
+                  setNatural({
+                    w: event.currentTarget.naturalWidth,
+                    h: event.currentTarget.naturalHeight,
+                  })
+                }
+                className="absolute left-1/2 top-1/2 max-w-none"
                 style={{
+                  ...(natural
+                    ? {
+                        width:
+                          natural.w *
+                          Math.max(VIEW / natural.w, VIEW / natural.h),
+                        height:
+                          natural.h *
+                          Math.max(VIEW / natural.w, VIEW / natural.h),
+                      }
+                    : { width: VIEW, height: VIEW, objectFit: "cover" }),
                   transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rotate}deg)`,
                 }}
               />
@@ -253,7 +284,7 @@ export function AvatarUploadDialog({
               event.preventDefault();
               read(event.dataTransfer.files?.[0]);
             }}
-            className="relative mx-auto flex size-[300px] cursor-pointer flex-col items-center justify-center gap-3 rounded-full border-2 border-dashed border-muted-foreground/25"
+            className="relative mx-auto flex size-[300px] cursor-pointer flex-col items-center justify-center gap-3 rounded-[32px] border-2 border-dashed border-muted-foreground/25"
           >
             <div className="flex size-14 items-center justify-center rounded-lg border-[1.5px] border-dashed border-muted-foreground/40 text-muted-foreground">
               <ImagePlus className="size-[22px]" />
