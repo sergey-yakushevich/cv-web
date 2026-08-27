@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCv } from "@/lib/db/queries";
+import { getCv, incrementCounter } from "@/lib/db/queries";
 import { attachmentHeader, resumePdfFileName } from "@/lib/pdf/filename";
 import { renderResumePdf } from "@/lib/pdf/render-resume";
 
@@ -45,6 +45,9 @@ export async function GET(_request: Request, { params }: RouteContext) {
       origin,
     });
     const fileName = resumePdfFileName(cv.data);
+
+    // The number the welcome dialog brags about.
+    incrementCounter("resumes_generated");
 
     return new NextResponse(Buffer.from(pdf), {
       headers: {

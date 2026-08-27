@@ -31,6 +31,11 @@ CREATE TABLE IF NOT EXISTS cvs (
 );
 
 CREATE INDEX IF NOT EXISTS cvs_user_id_idx ON cvs (user_id, position);
+
+CREATE TABLE IF NOT EXISTS counters (
+  name  TEXT PRIMARY KEY,
+  value INTEGER NOT NULL DEFAULT 0
+);
 `;
 
 /**

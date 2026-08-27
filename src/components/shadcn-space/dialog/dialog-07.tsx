@@ -59,13 +59,18 @@ const bubbles = [
   { top: 22, left: 66.2, size: 3.3, warm: true, duration: 3.7, delay: -2.45 },
 ] as const;
 
+interface WelcomeDialogProps {
+  /** Global count of PDFs the builder has rendered, shown as social proof. */
+  resumesGenerated?: number;
+}
+
 /**
  * The first-visit greeting: this is a free CV builder, no registration, and
  * this page is the visitor's own copy. Rendered open; closing it (button,
  * Esc, backdrop) deletes the cv_welcome cookie the session route set, so the
  * server stops rendering it.
  */
-export function WelcomeDialog() {
+export function WelcomeDialog({ resumesGenerated = 0 }: WelcomeDialogProps) {
   const [open, setOpen] = useState(true);
 
   const close = () => {
@@ -132,6 +137,14 @@ export function WelcomeDialog() {
               parsers can actually read.
             </DialogDescription>
           </DialogHeader>
+          {resumesGenerated > 0 && (
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">
+                {resumesGenerated.toLocaleString("en-US")}
+              </span>{" "}
+              {resumesGenerated === 1 ? "resume" : "resumes"} generated so far
+            </p>
+          )}
           <DialogClose asChild={true}>
             <Button className="h-10 w-full rounded-full hover:bg-primary/80">
               Start building

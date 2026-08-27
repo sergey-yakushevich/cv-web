@@ -148,3 +148,26 @@ export function slugAvailable(userId: string, slug: string): boolean {
     .prepare("SELECT 1 FROM cvs WHERE user_id = ? AND slug = ?")
     .get(userId, slug);
 }
+
+/*
+ * Global counters — one row per named statistic. The only one so far is
+ * "resumes_generated", bumped on every successful PDF render and shown in
+ * the welcome dialog.
+ */
+
+export function incrementCounter(name: string): void {
+  getDb()
+    .prepare(
+      `INSERT INTO counters (name, value) VALUES (?, 1)
+       ON CONFLICT(name) DO UPDATE SET value = value + 1`
+    )
+    .run(name);
+}
+
+export function getCounter(name: string): number {
+  const row = getDb()
+    .prepare("SELECT value FROM counters WHERE name = ?")
+    .get(name) as { value: number } | undefined;
+
+  return row?.value ?? 0;
+}

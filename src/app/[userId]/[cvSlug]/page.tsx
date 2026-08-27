@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { ResumeView } from "@/components/resume-view";
 import { WelcomeDialog } from "@/components/shadcn-space/dialog/dialog-07";
-import { getCv, listCvs } from "@/lib/db/queries";
+import { getCounter, getCv, listCvs } from "@/lib/db/queries";
 
 // Reads per-user rows, so there is nothing to pre-render.
 export const dynamic = "force-dynamic";
@@ -50,7 +50,9 @@ export default function CvPage({ params }: PageProps) {
   return (
     <>
       <ResumeView cv={cv} cvs={listCvs(params.userId)} userId={params.userId} />
-      {showWelcome && <WelcomeDialog />}
+      {showWelcome && (
+        <WelcomeDialog resumesGenerated={getCounter("resumes_generated")} />
+      )}
     </>
   );
 }
