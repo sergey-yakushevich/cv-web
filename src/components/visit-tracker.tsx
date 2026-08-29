@@ -3,14 +3,14 @@
 /*
  * Visitor + action tracking for the CV SPA.
  *
- * buildcv is a single-page editor: after the first load the user barely
- * changes URL, so page views alone say almost nothing. What matters is what
- * they *do* — open the editor, upload a photo, save, download the PDF. This
- * component records those actions as trackhub events, plus a page_view for the
- * initial load and any real route change.
+ * Page views, dwell time and engagement are no longer implemented here. They
+ * come from the shared trackhub tracker (served at /trk/t.js), which every site
+ * now loads — four hand-maintained copies had already drifted apart, and that
+ * drift is what silently dropped this app's client context for every visitor.
  *
- * Everything is fire-and-forget to POST /api/track (which forwards server-side
- * to the central trackhub API). Tracking must never break the page.
+ * What stays here is the part that is genuinely specific to buildcv: it is a
+ * single-page editor, so after the first load the user barely changes URL and
+ * what matters is what they *do*.
  *
  * Actions captured:
  *   - button_click : any button / link / role=button, labelled by its text
@@ -25,198 +25,90 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-const TOKEN_KEY = "cv_vid";
+const TRACKER_SRC =
+  process.env.NEXT_PUBLIC_TRACKHUB_SCRIPT ?? "https://cyberjosef.dev/trk/t.js";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * Strips the workspace id out of a path before it is reported.
- *
- * Knowing a CV's URL is what grants permission to read *and* edit it — there is
- * no registration, so the id in the path is the whole credential. Reporting the
- * literal path would file that credential into the analytics store next to an
- * IP and a device fingerprint, so "/<uuid>/my-cv" is reported as
- * "/:workspace/my-cv". The action is still counted; the key is not handed over.
- */
-function redactPath(path: string): string {
-  return path
-    .split("/")
-    .map((segment) => (UUID.test(segment) ? ":workspace" : segment))
-    .join("/");
-}
-
-function uuid(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-function visitorToken(): string {
-  try {
-    let token = localStorage.getItem(TOKEN_KEY);
-    if (!token) {
-      token = uuid();
-      localStorage.setItem(TOKEN_KEY, token);
-    }
-    return token;
-  } catch {
-    return uuid();
-  }
-}
-
-let cachedFingerprint: string | null = null;
-
-async function getFingerprint(): Promise<string> {
-  if (cachedFingerprint) return cachedFingerprint;
-  try {
-    const fp = await FingerprintJS.load();
-    const result = await fp.get();
-    cachedFingerprint = result.visitorId;
-    return cachedFingerprint;
-  } catch {
-    return "";
-  }
-}
-
-function clientContext(): Record<string, unknown> {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    screen_w: window.screen?.width,
-    screen_h: window.screen?.height,
-    viewport_w: window.innerWidth,
-    viewport_h: window.innerHeight,
-    device_pixel_ratio: window.devicePixelRatio,
-    language: navigator.language,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    referrer: document.referrer || null,
-    landing_path: redactPath(window.location.pathname),
-    utm_source: params.get("utm_source"),
-    utm_medium: params.get("utm_medium"),
-    utm_campaign: params.get("utm_campaign"),
-    utm_content: params.get("utm_content"),
-    utm_term: params.get("utm_term"),
-  };
-}
-
-function post(body: Record<string, unknown>): void {
-  const json = JSON.stringify(body);
-
-  if (navigator.sendBeacon) {
-    const blob = new Blob([json], { type: "application/json" });
-    if (navigator.sendBeacon("/api/track", blob)) return;
-  }
-
-  void fetch("/api/track", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: json,
-    keepalive: true,
-  }).catch(() => {
-    // Tracking must never break the page.
-  });
-}
-
-let contextSent = false;
-
-type EventFields = {
-  id?: string;
-  name: string;
-  label?: string;
-  path?: string;
-  duration_ms?: number;
-  meta?: Record<string, unknown>;
+type TrackhubAPI = {
+  __loaded?: boolean;
+  q?: unknown[][];
+  pageview?: (path?: string) => void;
+  event?: (name: string, options?: { label?: string; meta?: unknown }) => void;
+  fingerprint?: (value: string) => void;
 };
 
-/** Send one event, attaching the one-time client context on the first beacon. */
-async function sendEvent(event: EventFields): Promise<void> {
+declare global {
+  interface Window {
+    trackhub?: TrackhubAPI;
+  }
+}
+
+/**
+ * Calls the shared tracker, queueing when the script has not landed yet.
+ * Tracking must never break the page, so every path here swallows its errors.
+ */
+function call(method: string, ...args: unknown[]): void {
+  if (typeof window === "undefined") return;
   try {
-    const body: Record<string, unknown> = { token: visitorToken() };
-    if (!contextSent) {
-      contextSent = true;
-      const fingerprint = await getFingerprint();
-      Object.assign(body, clientContext(), {
-        device_fingerprint: fingerprint || null,
-      });
+    if (!window.trackhub) {
+      window.trackhub = { q: [] };
     }
-    post({
-      ...body,
-      event: {
-        id: event.id ?? uuid(),
-        name: event.name,
-        label: event.label ?? null,
-        path: event.path ?? redactPath(window.location.pathname),
-        occurred_at: new Date().toISOString(),
-        duration_ms: event.duration_ms,
-        meta: event.meta ?? null,
-      },
-    });
+    const api = window.trackhub;
+    if (api.__loaded) {
+      const fn = (api as Record<string, unknown>)[method];
+      if (typeof fn === "function") {
+        (fn as (...a: unknown[]) => void)(...args);
+      }
+      return;
+    }
+    if (!api.q) {
+      api.q = [];
+    }
+    api.q.push([method, ...args]);
   } catch {
     // Tracking must never break the page.
   }
 }
 
-/** Fire-and-forget action event (never awaited by callers). */
 function track(
   name: string,
   opts: { label?: string; meta?: Record<string, unknown> } = {}
 ): void {
-  void sendEvent({ name, label: opts.label, meta: opts.meta });
+  call("event", name, opts);
 }
 
-// ---------------------------------------------------------------------------
-// Page views + dwell time
-// ---------------------------------------------------------------------------
+/** Loads the shared tracker once. */
+function installTracker(): void {
+  if (document.querySelector<HTMLScriptElement>("script[data-trackhub]"))
+    return;
 
-type OpenPageView = {
-  id: string;
-  path: string;
-  activeMs: number;
-  resumedAt: number | null;
-};
-
-let openPageView: OpenPageView | null = null;
-
-function accumulate(view: OpenPageView): void {
-  if (view.resumedAt === null) return;
-  view.activeMs += Date.now() - view.resumedAt;
-  view.resumedAt = null;
+  const script = document.createElement("script");
+  script.src = TRACKER_SRC;
+  script.async = true;
+  script.dataset.trackhub = "";
+  // The beacon goes to this app's own route, which adds the real IP and user
+  // agent and holds the API token server-side.
+  script.dataset.endpoint = "/api/track";
+  // Keep the historic localStorage key so returning visitors stay the same
+  // visitor rather than all appearing brand new on deploy day.
+  script.dataset.key = "cv_vid";
+  document.head.appendChild(script);
 }
 
-function closePageView(): void {
-  const view = openPageView;
-  if (!view) return;
-  openPageView = null;
-
-  accumulate(view);
-  // Synchronous on purpose: runs on unload, where promise continuations are
-  // not guaranteed to execute.
-  post({
-    token: visitorToken(),
-    event: {
-      id: view.id,
-      name: "page_view",
-      path: view.path,
-      duration_ms: view.activeMs,
-    },
-  });
-}
-
-function trackPageView(rawPath: string): void {
-  const path = redactPath(rawPath);
-  if (openPageView?.path === path) return;
-
-  closePageView();
-
-  const view: OpenPageView = {
-    id: uuid(),
-    path,
-    activeMs: 0,
-    resumedAt: Date.now(),
-  };
-  openPageView = view;
-
-  void sendEvent({ id: view.id, name: "page_view", path });
+/**
+ * Hands the device fingerprint to the shared tracker.
+ *
+ * This is an analytics grouping key only. It is never an identity or an access
+ * check — a CV is reached by holding its URL, and a fingerprint collision must
+ * never be able to show one person another's workspace.
+ */
+async function reportFingerprint(): Promise<void> {
+  try {
+    const fp = await FingerprintJS.load();
+    const result = await fp.get();
+    if (result.visitorId) call("fingerprint", result.visitorId);
+  } catch {
+    // A missing fingerprint costs device grouping, nothing more.
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -303,31 +195,24 @@ function installActions(): void {
 
 // ---------------------------------------------------------------------------
 
-let listenersInstalled = false;
-
-function installPageListeners(): void {
-  if (listenersInstalled) return;
-  listenersInstalled = true;
-
-  window.addEventListener("pagehide", closePageView);
-  document.addEventListener("visibilitychange", () => {
-    const view = openPageView;
-    if (!view) return;
-    if (document.visibilityState === "hidden") {
-      accumulate(view);
-    } else if (view.resumedAt === null) {
-      view.resumedAt = Date.now();
-    }
-  });
-}
+let started = false;
 
 export function VisitTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
-    installPageListeners();
-    installActions();
-    trackPageView(pathname);
+    if (!started) {
+      started = true;
+      installTracker();
+      installActions();
+      void reportFingerprint();
+      // The tracker opens the first page view itself on load.
+      return;
+    }
+    // App Router navigations go through the history API, which the tracker
+    // already hooks; this is the belt to that braces, and it de-duplicates by
+    // path so a double call costs nothing.
+    call("pageview", pathname);
   }, [pathname]);
 
   return null;
