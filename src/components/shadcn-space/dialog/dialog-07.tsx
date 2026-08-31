@@ -138,12 +138,14 @@ export function WelcomeDialog({ resumesGenerated = 0 }: WelcomeDialogProps) {
             </DialogDescription>
           </DialogHeader>
           {resumesGenerated > 0 && (
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">
+            <div className="dialog-07-badge relative w-full overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.06] px-6 py-5">
+              <p className="text-4xl font-bold leading-none tracking-tight text-primary tabular-nums">
                 {resumesGenerated.toLocaleString("en-US")}
-              </span>{" "}
-              {resumesGenerated === 1 ? "resume" : "resumes"} generated so far
-            </p>
+              </p>
+              <p className="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                {resumesGenerated === 1 ? "Resume" : "Resumes"} generated
+              </p>
+            </div>
           )}
           <DialogClose asChild={true}>
             <Button className="h-10 w-full rounded-full hover:bg-primary/80">
