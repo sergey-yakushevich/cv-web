@@ -51,6 +51,8 @@ CV content lives in the database, one JSON blob per CV. `src/lib/resume-json.ts`
 
 The screen fonts are self-hosted variable WOFF2 files (`public/fonts`), declared in `globals.css` and **preloaded from the root layout** (`PRELOADED_FONTS`), so the first paint is already in the final fonts. `Inter Fallback` / `Source Serif Fallback` are metric-matched local fallbacks (size-adjust etc. computed with fontTools) so nothing shifts even when the swap happens. Do not add a route-level `loading.tsx` skeleton back — the page must render once, in its final style. If you replace a font file, recompute the fallback metrics.
 
+The per-theme fonts (`public/fonts/Montserrat`, `Poppins`, …) must be **true static instances**. Google Fonts serves variable-font subsets for upgraded families even when specific weights are requested, and Chrome's PDF writer embeds a variable instance as Type 3 glyphs — heavier-looking text and a broken text layer. Pin any new download with fontTools `varLib.instancer` (wght to the file's weight, other axes to default); `test/font-statics.test.ts` fails on any non-`*Variable*` file that still carries an fvar table.
+
 ### Print Optimization
 The app includes special print styles (`@media print` in globals.css) to ensure the CV looks good when printed. Test print functionality when making layout changes.
 
