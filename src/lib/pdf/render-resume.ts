@@ -1,4 +1,5 @@
 import { getBrowser } from "./browser";
+import { isWhite, paintPageBackground, parseCssColor } from "./page-background";
 
 interface RenderOptions {
   /** Page path to print, without a leading slash, e.g. "<userId>/<slug>". */
@@ -77,11 +78,28 @@ export async function renderResumePdf({
       );
     }
 
-    return await page.pdf({
+    /*
+     * The themed page background, read from the live page so it is always
+     * the exact color Chrome painted. Chrome clips every paint to the area
+     * inside the @page margins, so a themed CV comes out of page.pdf framed
+     * in white; paintPageBackground below fills the margins to match.
+     */
+    const bodyBackground = await page.evaluate(
+      () => getComputedStyle(document.body).backgroundColor
+    );
+
+    const pdf = await page.pdf({
       format: "A4",
       printBackground: true,
       preferCSSPageSize: true,
     });
+
+    const background = parseCssColor(bodyBackground);
+    if (!background || isWhite(background)) {
+      return pdf;
+    }
+
+    return await paintPageBackground(pdf, background);
   } finally {
     await page.close();
   }

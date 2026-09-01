@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   isValidSlug,
   slugify,
+  unwrapSavePayload,
   validateResume,
 } from "@/lib/validate-resume";
 
@@ -135,5 +136,31 @@ describe("isValidSlug", () => {
     expect(isValidSlug("-cv")).toBe(false);
     expect(isValidSlug("cv-")).toBe(false);
     expect(isValidSlug("CV")).toBe(false);
+  });
+});
+
+describe("unwrapSavePayload", () => {
+  it("passes a raw resume through with no label", () => {
+    const resume = { name: "Ada" };
+    expect(unwrapSavePayload(resume)).toEqual({ resume, label: undefined });
+  });
+
+  it("unwraps an envelope and trims the label", () => {
+    const resume = { name: "Ada" };
+    expect(unwrapSavePayload({ label: "  New name ", data: resume })).toEqual({
+      resume,
+      label: "New name",
+    });
+  });
+
+  it("drops an empty or non-string label", () => {
+    const resume = { name: "Ada" };
+    expect(unwrapSavePayload({ label: "   ", data: resume }).label).toBeUndefined();
+    expect(unwrapSavePayload({ label: 7, data: resume }).label).toBeUndefined();
+  });
+
+  it("treats a resume-like object without data as raw", () => {
+    const raw = { name: "Ada", label: "not an envelope" };
+    expect(unwrapSavePayload(raw).resume).toBe(raw);
   });
 });

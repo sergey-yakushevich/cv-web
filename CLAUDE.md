@@ -78,10 +78,11 @@ and a collision would show one person another's CV. Do not reintroduce it as an
 identity mechanism. (FingerprintJS in the visit tracker is analytics grouping
 only — never identity.)
 
-New users are seeded with `src/data/default-cv.tsx` via
-`src/data/starter-template.ts` — a real CV, contact details included. Chosen
-deliberately over a placeholder skeleton; do not "fix" it by blanking the
-contact fields without asking.
+New users are seeded with two CVs via `src/data/starter-template.ts`: the cat
+CV (`src/data/cocks-cv.ts`, slug `cocks`, the default) and the human example
+(`src/data/default-cv.tsx`, slug `human`) — a real CV, contact details
+included. Chosen deliberately over a placeholder skeleton; do not "fix" it by
+blanking the contact fields without asking.
 
 ### PDF Generation
 
@@ -94,6 +95,11 @@ same page and the same `@media print` CSS.
   waits for `document.fonts.ready`, without which Chrome prints before the
   static faces load and falls back to Arial.
 - **`src/lib/pdf/browser.ts`** — one reused Chrome, plus the `CHROME_PATH` lookup.
+- **`src/lib/pdf/page-background.ts`** — paints the @page margins in the CV's
+  theme color after the render. Chrome clips every paint (canvas background
+  included) to the area inside the @page margins, so no CSS can color them; a
+  themed CV came out framed in printer-white until the PDF was post-processed
+  with pdf-lib.
 - The route prints over `http://127.0.0.1:$PORT`, never the request origin:
   behind the proxy that resolved to `https://localhost:3000` and every render
   failed with `ERR_SSL_PROTOCOL_ERROR`.

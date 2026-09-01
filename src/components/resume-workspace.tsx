@@ -1,6 +1,13 @@
 "use client";
 
-import { BoxSelect, FileText, Layers, Loader2, Save } from "lucide-react";
+import {
+  BoxSelect,
+  Braces,
+  FileText,
+  Layers,
+  Loader2,
+  Save,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   type ReactNode,
@@ -10,8 +17,10 @@ import {
   useState,
 } from "react";
 import { AvatarUploadDialog } from "@/components/avatar-upload-dialog";
+import { CodeEditorDialog } from "@/components/code-editor-dialog";
 import { DownloadCvButton } from "@/components/download-cv-button";
 import { ResumeList, type ResumeListEntry } from "@/components/resume-list";
+import { SaveCvDialog } from "@/components/save-cv-dialog";
 import {
   type AnimatedTabItem,
   AnimatedTabs,
@@ -34,7 +43,8 @@ import {
 } from "@/components/workspace/theme-dropdown";
 import { usePageGuides } from "@/components/workspace/use-page-guides";
 import { collectResumeFromDom } from "@/lib/edit/collect-resume";
-import { DEFAULT_THEME_ID } from "@/lib/themes";
+import { parseResumeCode, resumeToCode } from "@/lib/edit/resume-code";
+import { DEFAULT_THEME_ID, isCvThemeId } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
 /** Shared look for the add-entry dialog inputs. */
@@ -48,8 +58,15 @@ interface ResumeWorkspaceProps {
   json: string;
   resumes: ResumeListEntry[];
   currentSlug: string;
+  /** The CV's name: the tab title, and the save dialog's starting name. */
+  currentLabel: string;
   /** Color theme id stored in the CV, undefined for the default palette. */
   theme?: string;
+}
+
+/** The tab shows the resume's name, cut so a long one cannot bend the bar. */
+function tabTitle(label: string): string {
+  return label.length > 10 ? `${label.slice(0, 10)}…` : label;
 }
 
 /**
@@ -72,6 +89,7 @@ export function ResumeWorkspace({
   json,
   resumes,
   currentSlug,
+  currentLabel,
   theme,
 }: ResumeWorkspaceProps) {
   const router = useRouter();
@@ -108,6 +126,12 @@ export function ResumeWorkspace({
     end: "",
   });
   const [entryError, setEntryError] = useState<string | null>(null);
+  /** The save dialog (Save / Save as new / rename), opened by the Save button. */
+  const [saveOpen, setSaveOpen] = useState(false);
+  /** The "{} Code" dialog: its snapshot text and its own error line. */
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [codeText, setCodeText] = useState("");
+  const [codeError, setCodeError] = useState<string | null>(null);
   /*
    * The dropdown's value. Local state so the label flips the instant a theme
    * is picked; the server prop catches up on the refresh after the save.
@@ -131,12 +155,38 @@ export function ResumeWorkspace({
     return collectResumeFromDom(root, json, pendingAvatar);
   }, [json, pendingAvatar]);
 
-  /** PUTs the collected CV over this version and refreshes the page. */
+  /**
+   * The payload every save sends: the CV as currently on the page — or the
+   * last server snapshot when the CV panel is unmounted (theme picked from
+   * the "My resumes" tab) — with the currently applied theme stamped in.
+   *
+   * The stamp is what fixed the theme-reset-on-save bug: a freshly picked
+   * theme lives in themeId until its own PUT lands and the page refreshes,
+   * and a save built purely from the older `json` snapshot silently wrote
+   * the previous palette back over it.
+   */
+  const collectPayload = useCallback(() => {
+    // biome-ignore lint/suspicious/noExplicitAny: the JSON is validated server-side
+    const payload: any = collectResume() ?? JSON.parse(json);
+    if (themeId === DEFAULT_THEME_ID) {
+      delete payload.theme;
+    } else {
+      payload.theme = themeId;
+    }
+    return payload;
+  }, [collectResume, json, themeId]);
+
+  /**
+   * PUTs a CV over this version and refreshes the page. `label` renames the
+   * CV in the same write (the save dialog's rename field); the slug — the
+   * URL people hold — never changes.
+   */
   const writeResume = useCallback(
     async (
       payload: unknown,
       onError: (message: string) => void,
-      onDone?: () => void
+      onDone?: () => void,
+      label?: string
     ) => {
       setSaving(true);
 
@@ -144,7 +194,7 @@ export function ResumeWorkspace({
         const response = await fetch(`/api/cvs/${userId}/${currentSlug}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ label, data: payload }),
         });
         const result = await response.json();
         if (!response.ok) {
@@ -168,15 +218,17 @@ export function ResumeWorkspace({
    * Picks a theme: the page re-colors immediately (a data-attribute write,
    * optionally inside a View Transition — see applyCvTheme), and the choice
    * is persisted into the CV JSON so a fresh load and the PDF render carry
-   * it. Any unsaved in-place edits ride along in the same PUT.
+   * it. Any unsaved in-place edits ride along in the same PUT; when the CV
+   * panel is unmounted (picked from another tab) the server snapshot is
+   * saved with just the theme changed.
    */
   const changeTheme = useCallback(
     (next: string) => {
       setThemeId(next);
       applyCvTheme(next);
 
-      const payload = collectResume();
-      if (!payload) return;
+      // biome-ignore lint/suspicious/noExplicitAny: the JSON is validated server-side
+      const payload: any = collectResume() ?? JSON.parse(json);
       if (next === DEFAULT_THEME_ID) {
         delete payload.theme;
       } else {
@@ -185,18 +237,96 @@ export function ResumeWorkspace({
       setSaveError(null);
       void writeResume(payload, setSaveError);
     },
-    [collectResume, writeResume]
+    [collectResume, json, writeResume]
   );
 
-  /** Writes the collected CV over this version. */
-  const save = useCallback(() => {
-    if (saving) return;
-    const payload = collectResume();
-    if (!payload) return;
+  /** "Save" in the save dialog: overwrite this CV, renaming it if asked. */
+  const saveOverwrite = useCallback(
+    (label: string) => {
+      if (saving) return;
+      setSaveError(null);
+      void writeResume(
+        collectPayload(),
+        setSaveError,
+        () => setSaveOpen(false),
+        label !== currentLabel ? label : undefined
+      );
+    },
+    [saving, collectPayload, writeResume, currentLabel]
+  );
 
-    setSaveError(null);
-    void writeResume(payload, setSaveError);
-  }, [saving, collectResume, writeResume]);
+  /** "Save as new": a fresh CV from the current state, then switch to it. */
+  const saveAsNew = useCallback(
+    async (label: string) => {
+      if (saving) return;
+      setSaving(true);
+      setSaveError(null);
+
+      try {
+        const response = await fetch(`/api/cvs/${userId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ label, data: collectPayload() }),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error ?? `HTTP ${response.status}`);
+        }
+
+        setDirty(false);
+        setPendingAvatar(null);
+        setSaveOpen(false);
+        router.push(`/${userId}/${result.slug}`);
+      } catch (error) {
+        setSaveError(error instanceof Error ? error.message : "Could not save");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [saving, userId, collectPayload, router]
+  );
+
+  /** "{} Code": snapshot the current state as commented JSON and show it. */
+  const openCode = useCallback(() => {
+    setCodeError(null);
+    setCodeText(resumeToCode(collectPayload()));
+    setCodeOpen(true);
+  }, [collectPayload]);
+
+  /**
+   * Applies the JSON from the code dialog: parse (comment lines stripped),
+   * PUT, and let the refresh re-render the CV from it. The theme named in
+   * the JSON is applied to the live page the same way the dropdown does it.
+   */
+  const applyCode = useCallback(
+    (text: string) => {
+      if (saving) return;
+
+      // biome-ignore lint/suspicious/noExplicitAny: the JSON is validated server-side
+      let parsed: any;
+      try {
+        parsed = parseResumeCode(text);
+      } catch (error) {
+        setCodeError(
+          error instanceof Error
+            ? `Not valid JSON: ${error.message}`
+            : "Not valid JSON."
+        );
+        return;
+      }
+
+      setCodeError(null);
+      void writeResume(parsed, setCodeError, () => {
+        setCodeOpen(false);
+        const nextTheme = isCvThemeId(parsed?.theme)
+          ? (parsed.theme as string)
+          : DEFAULT_THEME_ID;
+        setThemeId(nextTheme);
+        applyCvTheme(nextTheme);
+      });
+    },
+    [saving, writeResume]
+  );
 
   /**
    * Adds the entry from the dialog form and saves right away: the current
@@ -206,8 +336,7 @@ export function ResumeWorkspace({
    */
   const submitEntry = useCallback(() => {
     if (!entryKind || saving) return;
-    const payload = collectResume();
-    if (!payload) return;
+    const payload = collectPayload();
 
     if (entryKind === "work") {
       if (!Array.isArray(payload.work)) payload.work = [];
@@ -232,12 +361,12 @@ export function ResumeWorkspace({
 
     setEntryError(null);
     void writeResume(payload, setEntryError, () => setEntryKind(null));
-  }, [entryKind, entryForm, saving, collectResume, writeResume]);
+  }, [entryKind, entryForm, saving, collectPayload, writeResume]);
 
   const tabs: AnimatedTabItem[] = [
     {
       value: "cv",
-      label: "CV",
+      label: tabTitle(currentLabel),
       icon: FileText,
       content: (
         // biome-ignore lint/a11y/useKeyWithClickEvents: the capture handler only reroutes clicks while editing; every control keeps its own keyboard path
@@ -393,19 +522,31 @@ export function ResumeWorkspace({
         // The bar is wider than the content column, so the wrapper spans the
         // viewport and the row itself is the fixed-width bar.
         rowWrapperClassName="sticky top-0 z-50 flex justify-center print:hidden"
-        rowClassName="w-[700px] max-w-[calc(100%-2rem)] justify-center rounded-b-2xl border border-t-0 border-border bg-background px-4 pb-3.5 pt-3 shadow-[0_1px_3px_0_hsl(0_0%_0%/0.05),0_6px_16px_-8px_hsl(0_0%_0%/0.12)]"
+        rowClassName="w-[760px] max-w-[calc(100%-2rem)] justify-center rounded-b-2xl border border-t-0 border-border bg-background px-4 pb-3.5 pt-3 shadow-[0_1px_3px_0_hsl(0_0%_0%/0.05),0_6px_16px_-8px_hsl(0_0%_0%/0.12)]"
         listAccessory={
           <>
             <ThemeDropdown value={themeId} onChange={changeTheme} />
             <DownloadCvButton slug={currentSlug} userId={userId} />
+            {guidesOn && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={openCode}
+                title="View and edit this CV as JSON"
+                className="h-11 shrink-0 gap-1.5 rounded-2xl border-border bg-muted/40 px-3.5 text-sm font-medium shadow-none hover:bg-muted"
+              >
+                <Braces className="size-4" />
+                <span className="hidden sm:inline">Code</span>
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
               onClick={() => {
+                setSaveError(null);
                 if (dirty) {
-                  save();
+                  setSaveOpen(true);
                 } else {
-                  setSaveError(null);
                   setGuidesOn((on) => !on);
                 }
               }}
@@ -441,6 +582,25 @@ export function ResumeWorkspace({
             )}
           </>
         }
+      />
+
+      <SaveCvDialog
+        open={saveOpen}
+        currentLabel={currentLabel}
+        saving={saving}
+        error={saveError}
+        onClose={() => setSaveOpen(false)}
+        onSave={saveOverwrite}
+        onSaveAsNew={saveAsNew}
+      />
+
+      <CodeEditorDialog
+        open={codeOpen}
+        code={codeText}
+        saving={saving}
+        error={codeError}
+        onClose={() => setCodeOpen(false)}
+        onApply={applyCode}
       />
 
       <AvatarUploadDialog

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getCv, updateCv } from "@/lib/db/queries";
+import { getCv, renameCv, updateCv } from "@/lib/db/queries";
 import type { EditableResume } from "@/lib/resume-json";
-import { validateResume } from "@/lib/validate-resume";
+import { unwrapSavePayload, validateResume } from "@/lib/validate-resume";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,12 +33,17 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Body is not JSON" }, { status: 400 });
   }
 
-  const problems = validateResume(payload);
+  const { resume, label } = unwrapSavePayload(payload);
+
+  const problems = validateResume(resume);
   if (problems.length > 0) {
     return NextResponse.json({ error: problems.join(" ") }, { status: 422 });
   }
 
-  updateCv(params.userId, params.cvSlug, payload as EditableResume);
+  updateCv(params.userId, params.cvSlug, resume as EditableResume);
+  if (label) {
+    renameCv(params.userId, params.cvSlug, label);
+  }
 
   return NextResponse.json({ slug: params.cvSlug });
 }

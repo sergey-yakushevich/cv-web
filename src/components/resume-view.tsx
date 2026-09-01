@@ -7,6 +7,7 @@ import { WorkExperience } from "@/components/resume/WorkExperience";
 import { ResumeWorkspace } from "@/components/resume-workspace";
 import { SectionErrorBoundary } from "@/components/section-error-boundary";
 import type { CvRow } from "@/lib/db/queries";
+import { previewText } from "@/lib/edit/resume-code";
 import { type EditableResume, resumeToJson } from "@/lib/resume-json";
 import { generateResumeStructuredData } from "@/lib/structured-data";
 import { themeAttribute } from "@/lib/themes";
@@ -86,12 +87,14 @@ export function ResumeView({ cv, cvs, userId }: ResumeViewProps) {
         <ResumeWorkspace
           userId={userId}
           currentSlug={cv.slug}
+          currentLabel={cv.label}
           theme={data.theme}
           json={resumeToJson(data)}
           resumes={cvs.map((entry) => ({
             slug: entry.slug,
             label: entry.label,
-            about: entry.data.about,
+            // The card's body: the CV's own About text, clipped to 140 chars.
+            about: previewText(entry.data.summary, 140),
             headline: entry.data.headline,
           }))}
           cv={

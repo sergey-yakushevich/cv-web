@@ -82,10 +82,15 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      /*
+       * Plain var()s — withAlpha is for colors only. Wrapping the font vars
+       * in color-mix() produced font-family values no browser accepts, so
+       * every font-sans/font-serif class silently fell back to the UA font.
+       */
       fontFamily: {
-        sans: [withAlpha("--font-sans")],
-        serif: [withAlpha("--font-serif")],
-        mono: [withAlpha("--font-mono")],
+        sans: ["var(--font-sans)"],
+        serif: ["var(--font-serif)"],
+        mono: ["var(--font-mono)"],
       },
     },
   },

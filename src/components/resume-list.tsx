@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export interface ResumeListEntry {
   slug: string;
   label: string;
-  /** The CV's own "about" line, used as the description. */
+  /** The card body: the CV's About text, already clipped by the caller. */
   about: string;
   /** The CV's own headline. */
   headline: string;

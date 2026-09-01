@@ -134,6 +134,20 @@ export function updateCv(
   return result.changes > 0;
 }
 
+/**
+ * Renames a CV without touching its slug: the URL is the credential people
+ * may have bookmarked or shared, so a rename must never invalidate it.
+ */
+export function renameCv(userId: string, slug: string, label: string): boolean {
+  const result = getDb()
+    .prepare(
+      "UPDATE cvs SET label = ?, updated_at = ? WHERE user_id = ? AND slug = ?"
+    )
+    .run(label, now(), userId, slug);
+
+  return result.changes > 0;
+}
+
 export function deleteCv(userId: string, slug: string): boolean {
   const result = getDb()
     .prepare("DELETE FROM cvs WHERE user_id = ? AND slug = ?")

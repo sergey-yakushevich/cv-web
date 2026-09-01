@@ -71,6 +71,19 @@ describe("cvs", () => {
     expect(q.updateCv("wrong-user", "one", resume("x"))).toBe(false);
   });
 
+  it("renames only the addressed CV, keeping its slug and data", () => {
+    const userId = q.createUser();
+    q.createCv({ userId, slug: "keep", label: "Old name", data: resume("v1") });
+
+    expect(q.renameCv(userId, "keep", "New name")).toBe(true);
+    const row = q.getCv(userId, "keep");
+    expect(row?.label).toBe("New name");
+    expect(row?.slug).toBe("keep");
+    expect(row?.data.name).toBe("v1");
+    expect(q.renameCv(userId, "missing", "X")).toBe(false);
+    expect(q.renameCv("wrong-user", "keep", "X")).toBe(false);
+  });
+
   it("deletes and frees the slug", () => {
     const userId = q.createUser();
     q.createCv({ userId, slug: "gone", label: "Gone", data: resume("x") });

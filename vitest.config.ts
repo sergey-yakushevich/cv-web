@@ -2,6 +2,12 @@ import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  /*
+   * tsconfig.json says jsx: "preserve" for Next's compiler; Vite's oxc
+   * transform inherits that and then chokes on the untouched JSX when a test
+   * imports a .tsx data file. Compile it for real here.
+   */
+  oxc: { jsx: { runtime: "automatic" } },
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),

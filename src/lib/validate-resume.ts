@@ -72,6 +72,34 @@ export function validateResume(input: unknown): string[] {
   return problems;
 }
 
+/**
+ * Splits a PUT body into the resume and an optional new label.
+ *
+ * Two shapes are accepted: the raw resume JSON (the original contract), or an
+ * envelope { label?, data } from the save dialog. The resume shape has no
+ * "data" key of its own, so the envelope check cannot misfire on one.
+ */
+export function unwrapSavePayload(payload: unknown): {
+  resume: unknown;
+  label?: string;
+} {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    typeof (payload as { data: unknown }).data === "object"
+  ) {
+    const envelope = payload as { data: unknown; label?: unknown };
+    const label =
+      typeof envelope.label === "string" && envelope.label.trim()
+        ? envelope.label.trim()
+        : undefined;
+    return { resume: envelope.data, label };
+  }
+
+  return { resume: payload };
+}
+
 /** Turns "EN / Batumi / Go 2026" into "en-batumi-go-2026". */
 export function slugify(label: string): string {
   return label

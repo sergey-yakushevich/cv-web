@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { STARTER_TEMPLATE } from "@/data/starter-template";
+import { COCKS_TEMPLATE, STARTER_TEMPLATE } from "@/data/starter-template";
 import { createCv, createUser, listCvs, userExists } from "@/lib/db/queries";
 
 export const USER_COOKIE = "cv_uid";
@@ -26,20 +26,27 @@ export function currentUserId(): string | null {
 }
 
 /**
- * Creates a user and gives them a CV to start from.
- *
- * The starter CV is a neutral placeholder, not a copy of anyone's résumé — see
- * the note on STARTER_TEMPLATE.
+ * Creates a user and gives them two CVs to start from: the cat CV (the
+ * default they land on — safe to overwrite, nothing to leak) and the human
+ * example next to it. See the notes on COCKS_TEMPLATE / STARTER_TEMPLATE.
  */
 export function createUserWithStarterCv(): string {
   const userId = createUser();
 
   createCv({
     userId,
-    slug: "my-cv",
-    label: "My CV",
-    data: STARTER_TEMPLATE,
+    slug: "cocks",
+    label: "Cocks",
+    data: COCKS_TEMPLATE,
     position: 0,
+  });
+
+  createCv({
+    userId,
+    slug: "human",
+    label: "Human",
+    data: STARTER_TEMPLATE,
+    position: 1,
   });
 
   return userId;
