@@ -1,93 +1,62 @@
-import { RESUME_DATA as DEFAULT_RESUME } from "@/data/resumes";
 import type { ResumeData } from "@/lib/types";
 
-export function generatePersonStructuredData(
-  RESUME_DATA: ResumeData = DEFAULT_RESUME
-) {
+/*
+ * The url fields deliberately point at the site root, never at the CV's real
+ * address: the path is the credential that grants edit access, and JSON-LD is
+ * exactly the kind of place it would silently leak from.
+ */
+function personStructuredData(data: ResumeData) {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: RESUME_DATA.name,
-    alternateName: RESUME_DATA.initials,
-    description: RESUME_DATA.about,
-    url: RESUME_DATA.personalWebsiteUrl,
-    image: RESUME_DATA.avatarUrl,
-    sameAs: RESUME_DATA.contact.social.map((social) => social.url),
+    name: data.name,
+    alternateName: data.initials,
+    description: data.about,
+    url: data.personalWebsiteUrl,
+    image: data.avatarUrl,
+    sameAs: data.contact.social.map((social) => social.url),
     address: {
       "@type": "Place",
-      name: RESUME_DATA.location,
+      name: data.location,
     },
     contactPoint: {
       "@type": "ContactPoint",
-      email: RESUME_DATA.contact.email,
-      telephone: RESUME_DATA.contact.tel,
+      email: data.contact.email,
+      telephone: data.contact.tel,
       contactType: "personal",
     },
-    jobTitle: "Full Stack Engineer",
+    jobTitle: data.headline,
     worksFor:
-      RESUME_DATA.work.length > 0
+      data.work.length > 0
         ? {
             "@type": "Organization",
-            name: RESUME_DATA.work[0].company,
-            url: RESUME_DATA.work[0].link,
+            name: data.work[0].company,
+            url: data.work[0].link,
           }
         : undefined,
-    alumniOf: RESUME_DATA.education.map((edu) => ({
+    alumniOf: data.education.map((edu) => ({
       "@type": "EducationalOrganization",
       name: edu.school,
     })),
-    hasOccupation: RESUME_DATA.work.map((job) => ({
+    hasOccupation: data.work.map((job) => ({
       "@type": "Occupation",
       name: job.title,
       occupationLocation: {
         "@type": "Place",
-        name: RESUME_DATA.location,
-      },
-      occupationalCategory: "Software Engineering",
-      estimatedSalary: {
-        "@type": "MonetaryAmountDistribution",
-        name: "Professional software engineer",
+        name: data.location,
       },
     })),
-    knowsAbout: RESUME_DATA.skills,
+    knowsAbout: data.skills,
   };
 }
 
-export function generateWebPageStructuredData(
-  RESUME_DATA: ResumeData = DEFAULT_RESUME
-) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: `${RESUME_DATA.name} - Resume`,
-    description: RESUME_DATA.about,
-    url: "https://buildcv.cc",
-    inLanguage: "en-US",
-    isPartOf: {
-      "@type": "WebSite",
-      name: `${RESUME_DATA.name}'s Professional Resume`,
-      url: "https://buildcv.cc",
-    },
-    about: {
-      "@type": "Person",
-      name: RESUME_DATA.name,
-    },
-    mainEntity: generatePersonStructuredData(RESUME_DATA),
-  };
-}
-
-export function generateResumeStructuredData(
-  RESUME_DATA: ResumeData = DEFAULT_RESUME
-) {
+export function generateResumeStructuredData(data: ResumeData) {
   return {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
-    dateCreated: new Date().toISOString(),
-    dateModified: new Date().toISOString(),
-    mainEntity: generatePersonStructuredData(RESUME_DATA),
-    about: generatePersonStructuredData(RESUME_DATA),
-    name: `${RESUME_DATA.name} - Professional Resume`,
-    description: `Professional resume and portfolio of ${RESUME_DATA.name}, ${RESUME_DATA.about}`,
+    mainEntity: personStructuredData(data),
+    name: `${data.name} - Professional Resume`,
+    description: data.about,
     url: "https://buildcv.cc",
   };
 }

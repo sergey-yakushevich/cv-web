@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 import type React from "react";
+import { preload } from "react-dom";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { VisitTracker } from "@/components/visit-tracker";
 
@@ -58,11 +59,36 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+/*
+ * The two screen fonts, fetched from the very first bytes of the response.
+ *
+ * The @font-face rules alone start these downloads only after the CSS has
+ * arrived and some text has asked for the family — by then the page has
+ * painted in the fallback face and visibly re-renders when the real font
+ * lands. Preloading from the document head wins that race, so the first
+ * paint is already in the final fonts. (crossOrigin is required: font
+ * fetches are CORS-mode even from the same origin, and a mismatch would
+ * download the file twice.)
+ */
+const PRELOADED_FONTS = [
+  "/fonts/Inter/Inter-Variable.woff2",
+  "/fonts/Source_Serif_4/SourceSerif4-Variable.woff2",
+];
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  for (const href of PRELOADED_FONTS) {
+    preload(href, {
+      as: "font",
+      type: "font/woff2",
+      crossOrigin: "anonymous",
+      fetchPriority: "high",
+    });
+  }
+
   return (
     <html lang="en">
       <body>

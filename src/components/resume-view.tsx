@@ -1,16 +1,15 @@
-import { Suspense } from "react";
-import { Education } from "@/app/components/Education";
-import { Header } from "@/app/components/Header";
-import { Skills } from "@/app/components/Skills";
-import { Summary } from "@/app/components/Summary";
-import { WorkExperience } from "@/app/components/WorkExperience";
 import { CommandMenu } from "@/components/command-menu";
+import { Education } from "@/components/resume/Education";
+import { Header } from "@/components/resume/Header";
+import { Skills } from "@/components/resume/Skills";
+import { Summary } from "@/components/resume/Summary";
+import { WorkExperience } from "@/components/resume/WorkExperience";
 import { ResumeWorkspace } from "@/components/resume-workspace";
 import { SectionErrorBoundary } from "@/components/section-error-boundary";
-import { SectionSkeleton } from "@/components/section-skeleton";
 import type { CvRow } from "@/lib/db/queries";
 import { type EditableResume, resumeToJson } from "@/lib/resume-json";
 import { generateResumeStructuredData } from "@/lib/structured-data";
+import { themeAttribute } from "@/lib/themes";
 
 /**
  * Links for the command menu, de-duplicated by URL.
@@ -43,6 +42,12 @@ interface ResumeViewProps {
   userId: string;
 }
 
+/*
+ * The sections render synchronously from data already in hand, so there is
+ * nothing to Suspend on — the server HTML always carries the finished CV, and
+ * the first paint is the final layout. Each section keeps its own error
+ * boundary so one malformed field cannot blank the whole page.
+ */
 export function ResumeView({ cv, cvs, userId }: ResumeViewProps) {
   const data = cv.data;
   const structuredData = generateResumeStructuredData(data);
@@ -63,7 +68,17 @@ export function ResumeView({ cv, cvs, userId }: ResumeViewProps) {
         this element rather than the viewport. Horizontal padding belongs to the
         content column, which sets its own.
       */}
-      <main className="relative min-h-screen" id="main-content">
+      {/*
+        data-cv-theme drives the whole palette: globals.css lifts it to the
+        root with :has(), so it is rendered by the server — the first paint
+        and the PDF are themed — and swapped in place by the theme dropdown.
+      */}
+      <main
+        className="relative min-h-screen"
+        id="main-content"
+        data-cv-theme-root=""
+        data-cv-theme={themeAttribute(data.theme)}
+      >
         <div className="sr-only">
           <h1>{data.name}&apos;s Resume</h1>
         </div>
@@ -71,6 +86,7 @@ export function ResumeView({ cv, cvs, userId }: ResumeViewProps) {
         <ResumeWorkspace
           userId={userId}
           currentSlug={cv.slug}
+          theme={data.theme}
           json={resumeToJson(data)}
           resumes={cvs.map((entry) => ({
             slug: entry.slug,
@@ -80,38 +96,28 @@ export function ResumeView({ cv, cvs, userId }: ResumeViewProps) {
           }))}
           cv={
             <section
-              className="mx-auto w-full max-w-2xl space-y-4 bg-white "
+              className="mx-auto w-full max-w-2xl space-y-4 bg-background"
               aria-label="Resume Content"
             >
               <SectionErrorBoundary sectionName="Header">
-                <Suspense fallback={<SectionSkeleton lines={4} />}>
-                  <Header data={data} />
-                </Suspense>
+                <Header data={data} />
               </SectionErrorBoundary>
 
               <div className="space-y-8">
                 <SectionErrorBoundary sectionName="Summary">
-                  <Suspense fallback={<SectionSkeleton lines={2} />}>
-                    <Summary summary={data.summary} />
-                  </Suspense>
+                  <Summary summary={data.summary} />
                 </SectionErrorBoundary>
 
                 <SectionErrorBoundary sectionName="Work Experience">
-                  <Suspense fallback={<SectionSkeleton lines={6} />}>
-                    <WorkExperience work={data.work} />
-                  </Suspense>
+                  <WorkExperience work={data.work} />
                 </SectionErrorBoundary>
 
                 <SectionErrorBoundary sectionName="Education">
-                  <Suspense fallback={<SectionSkeleton lines={3} />}>
-                    <Education education={data.education} />
-                  </Suspense>
+                  <Education education={data.education} />
                 </SectionErrorBoundary>
 
                 <SectionErrorBoundary sectionName="Skills">
-                  <Suspense fallback={<SectionSkeleton lines={2} />}>
-                    <Skills skills={data.skills} />
-                  </Suspense>
+                  <Skills skills={data.skills} />
                 </SectionErrorBoundary>
               </div>
             </section>

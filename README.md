@@ -19,6 +19,7 @@ pnpm dev          # http://localhost:3000
 | `pnpm dev` | Development server |
 | `pnpm build` / `pnpm start` | Production build and server |
 | `pnpm check:fix` | Lint and format (Biome, not ESLint/Prettier) |
+| `pnpm test` | Run the vitest suite |
 | `pnpm cv:import <userId>` | Loads the CVs in `src/data` into one account (local only) |
 
 ## The screen
@@ -189,5 +190,4 @@ inside the container.
 ## Stack
 
 Next.js 14 (App Router) · TypeScript · Tailwind CSS 3 · shadcn/ui · Biome ·
-puppeteer-core · Apollo Server (a read-only GraphQL view of the data at
-`/graphql`)
+vitest · puppeteer-core · better-sqlite3

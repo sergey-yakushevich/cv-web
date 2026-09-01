@@ -1,4 +1,5 @@
 import type { EditableResume } from "@/lib/resume-json";
+import { CV_THEMES, isCvThemeId } from "@/lib/themes";
 
 /**
  * Checks a parsed JSON payload has the shape the CV renderer expects.
@@ -45,6 +46,14 @@ export function validateResume(input: unknown): string[] {
     problems.push('"contact" must be an object.');
   } else if (!Array.isArray(data.contact.social)) {
     problems.push('"contact.social" must be an array.');
+  }
+
+  // theme is optional; when present it must name a palette that exists,
+  // because the value round-trips into a data attribute on the page.
+  if (data.theme !== undefined && !isCvThemeId(data.theme)) {
+    problems.push(
+      `"theme" must be one of: ${CV_THEMES.map((t) => t.id).join(", ")}.`
+    );
   }
 
   if (Array.isArray(data.work)) {

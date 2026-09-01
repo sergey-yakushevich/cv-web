@@ -24,6 +24,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  appendBadge,
+  previewAvatarInSlot,
+} from "@/components/workspace/dom-edit";
+import {
+  applyCvTheme,
+  ThemeDropdown,
+} from "@/components/workspace/theme-dropdown";
+import { usePageGuides } from "@/components/workspace/use-page-guides";
+import { collectResumeFromDom } from "@/lib/edit/collect-resume";
+import { DEFAULT_THEME_ID } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
 /** Shared look for the add-entry dialog inputs. */
@@ -37,32 +48,23 @@ interface ResumeWorkspaceProps {
   json: string;
   resumes: ResumeListEntry[];
   currentSlug: string;
+  /** Color theme id stored in the CV, undefined for the default palette. */
+  theme?: string;
 }
 
 /**
- * Writes `value` at a dot path like "work.0.description.1" inside the parsed
- * CV. Numeric segments index arrays. A path that no longer resolves — the CV
- * shrank under the editor — is skipped rather than invented.
- */
-function setByPath(target: unknown, path: string, value: unknown) {
-  const keys = path.split(".");
-  let node = target as Record<string, unknown> | null;
-  for (let i = 0; i < keys.length - 1; i++) {
-    const next = node?.[keys[i]];
-    if (next == null || typeof next !== "object") return;
-    node = next as Record<string, unknown>;
-  }
-  if (node) node[keys[keys.length - 1]] = value;
-}
-
-/**
- * The screen chrome around the CV: three tabs plus the download button.
+ * The screen chrome around the CV: the tabs plus the download button.
  *
  * None of this reaches the PDF: the tab row is print:hidden, and globals.css
  * keeps the tab panel free of transforms so pagination still works. The PDF is
  * rendered from a fresh load of this page, so it always gets the CV tab no
  * matter which tab is selected on screen — and always the CV as saved on disk,
- * not whatever is currently typed into the JSON editor.
+ * not whatever is currently typed into the editor.
+ *
+ * The component itself is orchestration only. The pieces with real logic live
+ * elsewhere: reading edits back out of the DOM is lib/edit/collect-resume,
+ * the page-guide overlay is workspace/use-page-guides, and the direct DOM
+ * edits are workspace/dom-edit.
  */
 export function ResumeWorkspace({
   userId,
@@ -70,6 +72,7 @@ export function ResumeWorkspace({
   json,
   resumes,
   currentSlug,
+  theme,
 }: ResumeWorkspaceProps) {
   const router = useRouter();
 
@@ -83,7 +86,7 @@ export function ResumeWorkspace({
    */
   const [guidesOn, setGuidesOn] = useState(false);
   /**
-   * Controlled here rather than inside AnimatedTabs so the guides effect can
+   * Controlled here rather than inside AnimatedTabs so the guides hook can
    * re-run when the CV tab comes back: switching tabs unmounts the CV panel,
    * which throws away the injected page gaps and the contenteditable marks.
    */
@@ -95,14 +98,6 @@ export function ResumeWorkspace({
   const [pendingAvatar, setPendingAvatar] = useState<string | null>(null);
   /** The file picked from the CV photo click, handed to the crop dialog. */
   const [pickedImage, setPickedImage] = useState<string | null>(null);
-  /** One entry per PDF page: where its dashed sheet sits over the CV. */
-  const [pageGuides, setPageGuides] = useState<
-    { top: number; height: number }[]
-  >([]);
-  /** How far the sheets extend past the content column (the page margins). */
-  const [pageMarginX, setPageMarginX] = useState(48);
-  /** Pushes the caption below the last sheet's empty tail. */
-  const [tailSpace, setTailSpace] = useState(0);
   /** Which "add entry" dialog is open, and its form. */
   const [entryKind, setEntryKind] = useState<"work" | "education" | null>(null);
   const [entryForm, setEntryForm] = useState({
@@ -113,429 +108,95 @@ export function ResumeWorkspace({
     end: "",
   });
   const [entryError, setEntryError] = useState<string | null>(null);
+  /*
+   * The dropdown's value. Local state so the label flips the instant a theme
+   * is picked; the server prop catches up on the refresh after the save.
+   */
+  const [themeId, setThemeId] = useState(theme ?? DEFAULT_THEME_ID);
   const cvRef = useRef<HTMLDivElement>(null);
 
-  /*
-   * contenteditable is applied by hand rather than through React because the
-   * CV subtree is a server-rendered prop — there is no client component per
-   * field to own the attribute. The MutationObserver re-applies it when the
-   * server swaps the subtree in (after a save, or a Suspense boundary
-   * resolving). It observes childList only: watching attributes would loop on
-   * its own setAttribute calls.
-   */
   useEffect(() => {
-    // Leaving the CV tab unmounts the panel (and with it the injected page
-    // gaps); drop the stale sheet boxes so nothing misdrawn flashes when the
-    // tab comes back and this effect rebuilds everything.
-    if (activeTab !== "cv") {
-      setPageGuides([]);
-      setTailSpace(0);
-      return;
-    }
+    setThemeId(theme ?? DEFAULT_THEME_ID);
+  }, [theme]);
 
-    const root = cvRef.current;
-    if (!root) return;
+  const { pageGuides, pageMarginX, tailSpace } = usePageGuides(
+    cvRef,
+    guidesOn,
+    activeTab
+  );
 
-    const apply = () => {
-      for (const el of root.querySelectorAll(
-        "[data-edit-path], [data-edit-item]"
-      )) {
-        if (guidesOn) el.setAttribute("contenteditable", "plaintext-only");
-        else el.removeAttribute("contenteditable");
-      }
-    };
-    apply();
-
-    /* The visual gap between two sheets, like a PDF viewer's. */
-    const PAGE_GAP = 24;
-
-    const clearPageGaps = () => {
-      for (const el of root.querySelectorAll<HTMLElement>("[data-page-gap]")) {
-        el.style.marginTop = "";
-        el.style.removeProperty("--natural-margin");
-        el.removeAttribute("data-page-gap");
-      }
-    };
-
-    if (!guidesOn) {
-      clearPageGaps();
-      setPageGuides([]);
-      setTailSpace(0);
-      return;
-    }
-
-    /*
-     * Where would the PDF break pages? An A4 sheet at the print margins
-     * leaves a 186x273mm printable box (273mm ~ 1032 CSS px), and the print
-     * CSS drops the root font from 16px to 14px. Tailwind sizes are all
-     * rem-based, so on screen the same content is roughly root/14 times
-     * taller than in print — the print column being a little wider (186mm vs
-     * 640px) absorbs most of the wrapping difference, which is what a
-     * comparison against a real generated PDF showed. Blocks the print CSS
-     * refuses to split (one job, one bullet) get pushed whole onto the next
-     * page, so a boundary that lands inside one moves up to its top — the
-     * same rule Chrome applies. An approximation of real pagination, but an
-     * honest one.
-     */
-    const computePages = () => {
-      const section = root.querySelector('[aria-label="Resume Content"]');
-      if (!section) return;
-
-      // Measure the natural flow — the layout print would see.
-      clearPageGaps();
-      const rect = section.getBoundingClientRect();
-
-      const PRINT_HEIGHT = (273 / 25.4) * 96;
-      const PRINT_FONT = 14;
-      const screenFont =
-        Number.parseFloat(
-          getComputedStyle(document.documentElement).fontSize
-        ) || 16;
-      const pageHeight = (PRINT_HEIGHT * screenFont) / PRINT_FONT;
-      const total = rect.height;
-
-      const measure = (el: Element) => {
-        const r = el.getBoundingClientRect();
-        return {
-          el: el as HTMLElement,
-          top: r.top - rect.top,
-          bottom: r.bottom - rect.top,
-        };
-      };
-      const atoms = Array.from(
-        section.querySelectorAll(".print-avoid-break, li")
-      )
-        .map(measure)
-        .sort((a, b) => a.top - b.top);
-      // Anything a visual page gap can be attached to: the unsplittable
-      // blocks plus whole sections, for boundaries that fall between them.
-      const anchors = Array.from(
-        section.querySelectorAll(".print-avoid-break, li, section")
-      )
-        .map(measure)
-        .sort((a, b) => a.top - b.top);
-
-      const boundaries: number[] = [];
-      let start = 0;
-      let guard = 0;
-      while (start + pageHeight < total && guard++ < 30) {
-        let end = start + pageHeight;
-        const straddler = atoms.find(
-          (a) =>
-            a.top > start &&
-            a.top < end &&
-            a.bottom > end &&
-            a.bottom - a.top < pageHeight
-        );
-        if (straddler) end = straddler.top;
-        boundaries.push(end);
-        start = end;
-      }
-
-      /*
-       * Turn the boundaries into real sheets, the way a PDF viewer shows
-       * them: each page is a fixed-height box with the 12mm margins around
-       * the printable area, content on a page ends where print would end it,
-       * and the unused remainder of the sheet stays empty. To make room, the
-       * block that starts each page is pushed down with extra margin so it
-       * lands exactly at the next sheet's content origin; the natural margin
-       * is preserved for print (see globals.css).
-       */
-      const marginY = (12 / 273) * pageHeight;
-      const marginX = (12 / 186) * rect.width;
-      const sheetHeight = pageHeight + 2 * marginY;
-
-      let injected = 0;
-      let contentStart = 0; // final position of the current page's content
-      const sheetTops = [contentStart - marginY];
-      const claimed: HTMLElement[] = [];
-      for (const boundary of boundaries) {
-        const anchor = anchors.find(
-          (a) => a.top >= boundary - 1 && !claimed.includes(a.el)
-        );
-        if (!anchor) continue;
-
-        const nextContentStart = contentStart + sheetHeight + PAGE_GAP;
-        const push = nextContentStart - (anchor.top + injected);
-        if (push <= 0) continue;
-
-        const natural =
-          Number.parseFloat(getComputedStyle(anchor.el).marginTop) || 0;
-        anchor.el.style.setProperty("--natural-margin", `${natural}px`);
-        anchor.el.style.marginTop = `${natural + push}px`;
-        anchor.el.setAttribute("data-page-gap", "");
-        claimed.push(anchor.el);
-
-        injected += push;
-        contentStart = nextContentStart;
-        sheetTops.push(contentStart - marginY);
-      }
-
-      // Position the sheets over the re-laid-out content.
-      const rootRect = root.getBoundingClientRect();
-      const rect2 = section.getBoundingClientRect();
-      const offsetTop = rect2.top - rootRect.top;
-      setPageMarginX(marginX);
-      setPageGuides(
-        sheetTops.map((top) => ({
-          top: offsetTop + top,
-          height: sheetHeight,
-        }))
-      );
-      // The last sheet extends past the content into its empty remainder;
-      // the caption pill moves below it.
-      const lastBottom =
-        sheetTops[sheetTops.length - 1] + sheetHeight - rect2.height;
-      setTailSpace(Math.max(8, lastBottom + 12));
-    };
-
-    let frame = 0;
-    const schedule = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(computePages);
-    };
-
-    schedule();
-    document.fonts?.ready.then(schedule);
-
-    const observer = new MutationObserver(() => {
-      apply();
-      schedule();
-    });
-    observer.observe(root, { childList: true, subtree: true });
-
-    const resizeObserver = new ResizeObserver(schedule);
-    resizeObserver.observe(root);
-
-    return () => {
-      observer.disconnect();
-      resizeObserver.disconnect();
-      cancelAnimationFrame(frame);
-      clearPageGaps();
-    };
-  }, [guidesOn, activeTab]);
-
-  /** Shows the freshly cropped photo in place before it is saved. */
-  const previewAvatar = useCallback((dataUrl: string) => {
-    const slot =
-      cvRef.current?.querySelector<HTMLElement>("[data-avatar-slot]");
-    if (!slot) return;
-
-    const img = slot.querySelector("img");
-    if (img) {
-      // next/image sets srcset, which would win over a plain src swap.
-      img.srcset = "";
-      img.src = dataUrl;
-      return;
-    }
-
-    // No photo yet: paint the ghost circle with the picture.
-    const ghost = slot.querySelector<HTMLElement>(".avatar-ghost");
-    if (!ghost) return;
-    ghost.style.backgroundImage = `url(${dataUrl})`;
-    ghost.style.backgroundSize = "cover";
-    ghost.style.backgroundPosition = "center";
-    ghost.style.borderStyle = "solid";
-    for (const child of Array.from(ghost.children)) {
-      (child as HTMLElement).style.visibility = "hidden";
-    }
-  }, []);
-
-  /**
-   * Collects every edited element back into the CV JSON. The DOM is the
-   * form: each data-edit-path element contributes its text at that path, so
-   * untouched fields round-trip unchanged from the `json` prop. Used by
-   * Save, Save-as-new and Copy alike.
-   */
   const collectResume = useCallback(() => {
     const root = cvRef.current;
     if (!root) return null;
-
-    {
-      const parsed = JSON.parse(json);
-
-      /*
-       * Entries can be added in the DOM (the "Add job" / "Add education"
-       * controls), so the arrays must be grown to cover every original index
-       * present before the indexed paths below can land in them.
-       */
-      const grow = (kind: "work" | "education", blank: () => unknown) => {
-        const arr = parsed[kind];
-        if (!Array.isArray(arr)) return;
-        for (const el of root.querySelectorAll<HTMLElement>(
-          `[data-entry="${kind}"]`
-        )) {
-          const index = Number(el.dataset.entryIndex) || 0;
-          while (arr.length <= index) arr.push(blank());
-        }
-      };
-      grow("work", () => ({
-        company: "",
-        link: "",
-        badges: [],
-        title: "",
-        start: "",
-        end: null,
-        description: [],
-      }));
-      grow("education", () => ({ school: "", degree: "", start: "", end: "" }));
-
-      for (const el of root.querySelectorAll<HTMLElement>("[data-edit-path]")) {
-        const path = el.dataset.editPath;
-        if (!path) continue;
-
-        let value: string | null = (el.textContent ?? "")
-          .replace(/\s+/g, " ")
-          .trim();
-
-        const format = el.dataset.editFormat;
-        // Link text is shown bare (github.com/...); stored with a scheme.
-        if (format === "url" && value && !/^https?:\/\//i.test(value)) {
-          value = `https://${value}`;
-        }
-        // An open-ended job renders as "Present" but is stored as null.
-        if (format === "present") {
-          value = value === "" || /^present$/i.test(value) ? null : value;
-        }
-
-        setByPath(parsed, path, value);
-      }
-
-      /*
-       * Badge lists are rebuilt wholesale rather than written by index:
-       * badges can be added and deleted in the DOM, so the list itself — in
-       * DOM order, blanks dropped — is the truth.
-       */
-      for (const list of root.querySelectorAll<HTMLElement>(
-        "[data-edit-list]"
-      )) {
-        const path = list.dataset.editList;
-        if (!path) continue;
-
-        const values = Array.from(
-          list.querySelectorAll<HTMLElement>("[data-edit-item]")
-        )
-          .map((el) => (el.textContent ?? "").replace(/\s+/g, " ").trim())
-          .filter(Boolean);
-
-        setByPath(parsed, path, values);
-      }
-
-      /*
-       * Deletions are absences: a contact item removed from the DOM takes
-       * its field with it. Email and phone blank out; a social entry is
-       * dropped — but only the socials the header actually renders can be
-       * deleted this way, so anything else (an icon the contact line does
-       * not show) is left untouched.
-       */
-      if (parsed.contact && typeof parsed.contact === "object") {
-        if (!root.querySelector('[data-edit-path="contact.email"]')) {
-          parsed.contact.email = "";
-        }
-        if (!root.querySelector('[data-edit-path="contact.tel"]')) {
-          parsed.contact.tel = "";
-        }
-        if (Array.isArray(parsed.contact.social)) {
-          const rendered = new Set(["globe", "github", "linkedin"]);
-          const surviving = new Set(
-            Array.from(
-              root.querySelectorAll<HTMLElement>("[data-edit-path]"),
-              (el) =>
-                el.dataset.editPath?.match(/^contact\.social\.(\d+)\.url$/)?.[1]
-            ).filter(Boolean)
-          );
-          parsed.contact.social = parsed.contact.social.filter(
-            (social: { icon?: string }, index: number) =>
-              !rendered.has(social?.icon ?? "") || surviving.has(String(index))
-          );
-        }
-      }
-
-      /*
-       * Jobs and education are rebuilt from the DOM: surviving entries in
-       * their on-screen order, keyed by the original index each article
-       * carries — a deleted entry simply is not in the list any more.
-       */
-      for (const kind of ["work", "education"] as const) {
-        const arr = parsed[kind];
-        if (!Array.isArray(arr)) continue;
-        parsed[kind] = Array.from(
-          root.querySelectorAll<HTMLElement>(`[data-entry="${kind}"]`),
-          (el) => arr[Number(el.dataset.entryIndex) || 0]
-        ).filter(Boolean);
-      }
-
-      if (pendingAvatar) parsed.avatarUrl = pendingAvatar;
-
-      return parsed;
-    }
+    return collectResumeFromDom(root, json, pendingAvatar);
   }, [json, pendingAvatar]);
 
+  /** PUTs the collected CV over this version and refreshes the page. */
+  const writeResume = useCallback(
+    async (
+      payload: unknown,
+      onError: (message: string) => void,
+      onDone?: () => void
+    ) => {
+      setSaving(true);
+
+      try {
+        const response = await fetch(`/api/cvs/${userId}/${currentSlug}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error ?? `HTTP ${response.status}`);
+        }
+
+        setDirty(false);
+        setPendingAvatar(null);
+        onDone?.();
+        router.refresh();
+      } catch (error) {
+        onError(error instanceof Error ? error.message : "Could not save");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [userId, currentSlug, router]
+  );
+
+  /**
+   * Picks a theme: the page re-colors immediately (a data-attribute write,
+   * optionally inside a View Transition — see applyCvTheme), and the choice
+   * is persisted into the CV JSON so a fresh load and the PDF render carry
+   * it. Any unsaved in-place edits ride along in the same PUT.
+   */
+  const changeTheme = useCallback(
+    (next: string) => {
+      setThemeId(next);
+      applyCvTheme(next);
+
+      const payload = collectResume();
+      if (!payload) return;
+      if (next === DEFAULT_THEME_ID) {
+        delete payload.theme;
+      } else {
+        payload.theme = next;
+      }
+      setSaveError(null);
+      void writeResume(payload, setSaveError);
+    },
+    [collectResume, writeResume]
+  );
+
   /** Writes the collected CV over this version. */
-  const save = useCallback(async () => {
+  const save = useCallback(() => {
     if (saving) return;
     const payload = collectResume();
     if (!payload) return;
 
-    setSaving(true);
     setSaveError(null);
-
-    try {
-      const response = await fetch(`/api/cvs/${userId}/${currentSlug}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error ?? `HTTP ${response.status}`);
-      }
-
-      setDirty(false);
-      setPendingAvatar(null);
-      router.refresh();
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Could not save");
-    } finally {
-      setSaving(false);
-    }
-  }, [saving, collectResume, userId, currentSlug, router]);
-
-  /**
-   * Appends an empty, focused badge to the clicked "+"'s list. The new badge
-   * is cloned from a sibling so it always matches the real markup; a list
-   * that is empty gets the same structure built by hand.
-   */
-  const addBadge = (button: HTMLElement) => {
-    const list = button.closest("[data-edit-list]");
-    const addItem = button.closest("li");
-    if (!list || !addItem) return;
-
-    let item: HTMLElement;
-    const prototype = list.querySelector("[data-edit-item]")?.closest("li");
-    if (prototype) {
-      item = prototype.cloneNode(true) as HTMLElement;
-      const badge = item.querySelector<HTMLElement>("[data-edit-item]");
-      if (badge) {
-        badge.textContent = "";
-        badge.removeAttribute("aria-label");
-      }
-    } else {
-      item = document.createElement("li");
-      item.className = "relative";
-      item.innerHTML =
-        '<span data-edit-item="" class="inline-flex items-center rounded-md border border-transparent bg-secondary px-2.5 py-0.5 align-middle text-xs font-semibold text-secondary-foreground"></span>' +
-        '<button type="button" data-remove-badge="" aria-label="Remove badge" class="badge-remove absolute -right-1.5 -top-1.5 hidden size-4 cursor-pointer items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:text-foreground print:hidden">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-2.5" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>' +
-        "</button>";
-    }
-
-    list.insertBefore(item, addItem);
-    const badge = item.querySelector<HTMLElement>("[data-edit-item]");
-    badge?.setAttribute("contenteditable", "plaintext-only");
-    badge?.focus();
-    setDirty(true);
-  };
+    void writeResume(payload, setSaveError);
+  }, [saving, collectResume, writeResume]);
 
   /**
    * Adds the entry from the dialog form and saves right away: the current
@@ -543,64 +204,35 @@ export function ResumeWorkspace({
    * education is appended, and the whole CV is written back — the refresh
    * then renders the entry with real edit paths, ready for inline editing.
    */
-  const submitEntry = useCallback(async () => {
+  const submitEntry = useCallback(() => {
     if (!entryKind || saving) return;
     const payload = collectResume();
     if (!payload) return;
 
-    setSaving(true);
-    setEntryError(null);
-
-    try {
-      if (entryKind === "work") {
-        if (!Array.isArray(payload.work)) payload.work = [];
-        payload.work.push({
-          company: entryForm.primary.trim(),
-          title: entryForm.secondary.trim(),
-          link: entryForm.link.trim(),
-          badges: [],
-          start: entryForm.start.trim(),
-          end: entryForm.end.trim() || null,
-          description: [],
-        });
-      } else {
-        if (!Array.isArray(payload.education)) payload.education = [];
-        payload.education.push({
-          school: entryForm.primary.trim(),
-          degree: entryForm.secondary.trim(),
-          start: entryForm.start.trim(),
-          end: entryForm.end.trim(),
-        });
-      }
-
-      const response = await fetch(`/api/cvs/${userId}/${currentSlug}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+    if (entryKind === "work") {
+      if (!Array.isArray(payload.work)) payload.work = [];
+      payload.work.push({
+        company: entryForm.primary.trim(),
+        title: entryForm.secondary.trim(),
+        link: entryForm.link.trim(),
+        badges: [],
+        start: entryForm.start.trim(),
+        end: entryForm.end.trim() || null,
+        description: [],
       });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error ?? `HTTP ${response.status}`);
-      }
-
-      setEntryKind(null);
-      setDirty(false);
-      setPendingAvatar(null);
-      router.refresh();
-    } catch (error) {
-      setEntryError(error instanceof Error ? error.message : "Could not add");
-    } finally {
-      setSaving(false);
+    } else {
+      if (!Array.isArray(payload.education)) payload.education = [];
+      payload.education.push({
+        school: entryForm.primary.trim(),
+        degree: entryForm.secondary.trim(),
+        start: entryForm.start.trim(),
+        end: entryForm.end.trim(),
+      });
     }
-  }, [
-    entryKind,
-    entryForm,
-    saving,
-    collectResume,
-    userId,
-    currentSlug,
-    router,
-  ]);
+
+    setEntryError(null);
+    void writeResume(payload, setEntryError, () => setEntryKind(null));
+  }, [entryKind, entryForm, saving, collectResume, writeResume]);
 
   const tabs: AnimatedTabItem[] = [
     {
@@ -660,7 +292,7 @@ export function ResumeWorkspace({
             const addButton = target.closest("[data-add-badge]");
             if (addButton) {
               event.preventDefault();
-              addBadge(addButton as HTMLElement);
+              if (appendBadge(addButton as HTMLElement)) setDirty(true);
               return;
             }
             const addEntryButton =
@@ -764,6 +396,7 @@ export function ResumeWorkspace({
         rowClassName="w-[700px] max-w-[calc(100%-2rem)] justify-center rounded-b-2xl border border-t-0 border-border bg-background px-4 pb-3.5 pt-3 shadow-[0_1px_3px_0_hsl(0_0%_0%/0.05),0_6px_16px_-8px_hsl(0_0%_0%/0.12)]"
         listAccessory={
           <>
+            <ThemeDropdown value={themeId} onChange={changeTheme} />
             <DownloadCvButton slug={currentSlug} userId={userId} />
             <Button
               type="button"
@@ -820,7 +453,7 @@ export function ResumeWorkspace({
         onConfirm={(dataUrl) => {
           setPendingAvatar(dataUrl);
           setDirty(true);
-          previewAvatar(dataUrl);
+          if (cvRef.current) previewAvatarInSlot(cvRef.current, dataUrl);
         }}
       />
 

@@ -37,8 +37,8 @@
     --sidebar-border: #e4e7ec;
     --sidebar-ring: #3280ff;
     --guide-line: 220 14% 86%;
-    --font-sans: Inter, sans-serif;
-    --font-serif: "Source Serif 4", serif;
+    --font-sans: Inter, "Inter Fallback", sans-serif;
+    --font-serif: "Source Serif 4", "Source Serif Fallback", serif;
     --font-mono: JetBrains Mono, monospace;
     --radius: 0.375rem;
     --shadow-x: 0;
@@ -98,8 +98,8 @@
     --sidebar-border: #404040;
     --sidebar-ring: #3280ff;
     --guide-line: 220 8% 38%;
-    --font-sans: Inter, sans-serif;
-    --font-serif: "Source Serif 4", serif;
+    --font-sans: Inter, "Inter Fallback", sans-serif;
+    --font-serif: "Source Serif 4", "Source Serif Fallback", serif;
     --font-mono: JetBrains Mono, monospace;
     --radius: 0.375rem;
     --shadow-x: 0;
@@ -126,10 +126,37 @@
 
 @font-face {
   font-family: "Inter";
-  src: url("/fonts/Inter/Inter-VariableFont_opsz,wght.ttf") format("truetype");
+  src: url("/fonts/Inter/Inter-Variable.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+}
+
+/*
+ * Metric-matched fallbacks, so the page cannot jump while a web font loads.
+ *
+ * The layout preloads both variable fonts, which normally wins the race
+ * against first paint — but on a slow connection the fallback face still
+ * shows first. These overrides resize Arial/Georgia to the exact advance
+ * widths and vertical metrics of Inter and Source Serif 4 (computed from the
+ * font files with fontTools), so when the swap happens no glyph moves.
+ */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  size-adjust: 109.38%;
+  ascent-override: 88.57%;
+  descent-override: 22.05%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Source Serif Fallback";
+  src: local("Georgia");
+  size-adjust: 102.14%;
+  ascent-override: 101.43%;
+  descent-override: 32.8%;
+  line-gap-override: 0%;
 }
 
 /*
@@ -143,8 +170,7 @@
  */
 @font-face {
   font-family: "Source Serif 4";
-  src: url("/fonts/Source_Serif_4/SourceSerif4-VariableFont_opsz,wght.ttf")
-    format("truetype");
+  src: url("/fonts/Source_Serif_4/SourceSerif4-Variable.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -152,8 +178,8 @@
 
 @font-face {
   font-family: "Source Serif 4";
-  src: url("/fonts/Source_Serif_4/SourceSerif4-Italic-VariableFont_opsz,wght.ttf")
-    format("truetype");
+  src: url("/fonts/Source_Serif_4/SourceSerif4-Italic-Variable.woff2")
+    format("woff2");
   font-weight: 100 900;
   font-style: italic;
   font-display: swap;
@@ -167,29 +193,29 @@
  */
 @font-face {
   font-family: "Source Serif Static";
-  src: url("/fonts/Source_Serif_4/static/SourceSerif4_18pt-Regular.ttf")
-    format("truetype");
+  src: url("/fonts/Source_Serif_4/static/SourceSerif4_18pt-Regular.woff2")
+    format("woff2");
   font-weight: 400;
   font-style: normal;
 }
 @font-face {
   font-family: "Source Serif Static";
-  src: url("/fonts/Source_Serif_4/static/SourceSerif4_18pt-SemiBold.ttf")
-    format("truetype");
+  src: url("/fonts/Source_Serif_4/static/SourceSerif4_18pt-SemiBold.woff2")
+    format("woff2");
   font-weight: 600;
   font-style: normal;
 }
 @font-face {
   font-family: "Source Serif Static";
-  src: url("/fonts/Source_Serif_4/static/SourceSerif4_18pt-Bold.ttf")
-    format("truetype");
+  src: url("/fonts/Source_Serif_4/static/SourceSerif4_18pt-Bold.woff2")
+    format("woff2");
   font-weight: 700;
   font-style: normal;
 }
 @font-face {
   font-family: "Source Serif Static";
-  src: url("/fonts/Source_Serif_4/static/SourceSerif4_18pt-Italic.ttf")
-    format("truetype");
+  src: url("/fonts/Source_Serif_4/static/SourceSerif4_18pt-Italic.woff2")
+    format("woff2");
   font-weight: 400;
   font-style: italic;
 }
@@ -204,25 +230,25 @@
  */
 @font-face {
   font-family: "Inter Static";
-  src: url("/fonts/Inter/static/Inter_18pt-Regular.ttf") format("truetype");
+  src: url("/fonts/Inter/static/Inter_18pt-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
 }
 @font-face {
   font-family: "Inter Static";
-  src: url("/fonts/Inter/static/Inter_18pt-Medium.ttf") format("truetype");
+  src: url("/fonts/Inter/static/Inter_18pt-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
 }
 @font-face {
   font-family: "Inter Static";
-  src: url("/fonts/Inter/static/Inter_18pt-SemiBold.ttf") format("truetype");
+  src: url("/fonts/Inter/static/Inter_18pt-SemiBold.woff2") format("woff2");
   font-weight: 600;
   font-style: normal;
 }
 @font-face {
   font-family: "Inter Static";
-  src: url("/fonts/Inter/static/Inter_18pt-Bold.ttf") format("truetype");
+  src: url("/fonts/Inter/static/Inter_18pt-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
 }
@@ -408,6 +434,112 @@
   .cv-guides [data-avatar-slot]:hover .avatar-overlay {
     display: flex;
   }
+}
+
+/*
+ * CV themes — the light presets from tweakcn (graphite, mono, sunset-horizon,
+ * elegant-luxury), exactly as their registry publishes them, trimmed to the
+ * tokens this app uses. Colors only: the fonts stay ours.
+ *
+ * The server renders data-cv-theme on the workspace <main>, and :has() lifts
+ * the override to the root, so the whole page — portals, dialogs, toolbar —
+ * re-themes, the first paint is already themed, and the PDF render (a fresh
+ * page load) picks the theme up with zero client JavaScript. The dropdown
+ * swaps the attribute in place for the tweakcn-style instant preview.
+ *
+ * These blocks are deliberately unlayered: unlayered CSS wins over @layer
+ * base, so no selector arms race with :root is possible.
+ */
+html:has([data-cv-theme="graphite"]) {
+  --background: oklch(0.9551 0 0);
+  --foreground: oklch(0.3211 0 0);
+  --card: oklch(0.9702 0 0);
+  --card-foreground: oklch(0.3211 0 0);
+  --popover: oklch(0.9702 0 0);
+  --popover-foreground: oklch(0.3211 0 0);
+  --primary: oklch(0.4891 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.9067 0 0);
+  --secondary-foreground: oklch(0.3211 0 0);
+  --muted: oklch(0.8853 0 0);
+  --muted-foreground: oklch(0.5103 0 0);
+  --accent: oklch(0.8078 0 0);
+  --accent-foreground: oklch(0.3211 0 0);
+  --destructive: oklch(0.5594 0.19 25.8625);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.8576 0 0);
+  --input: oklch(0.9067 0 0);
+  --ring: oklch(0.4891 0 0);
+  --radius: 0.35rem;
+}
+
+html:has([data-cv-theme="mono"]) {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.1448 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.1448 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.1448 0 0);
+  --primary: oklch(0.5555 0 0);
+  --primary-foreground: oklch(0.9851 0 0);
+  --secondary: oklch(0.9702 0 0);
+  --secondary-foreground: oklch(0.2046 0 0);
+  --muted: oklch(0.9702 0 0);
+  --muted-foreground: oklch(0.5486 0 0);
+  --accent: oklch(0.9702 0 0);
+  --accent-foreground: oklch(0.2046 0 0);
+  --destructive: oklch(0.583 0.2387 28.4765);
+  --destructive-foreground: oklch(0.9702 0 0);
+  --border: oklch(0.9219 0 0);
+  --input: oklch(0.9219 0 0);
+  --ring: oklch(0.709 0 0);
+  --radius: 0rem;
+}
+
+html:has([data-cv-theme="sunset-horizon"]) {
+  --background: oklch(0.9856 0.0084 56.3169);
+  --foreground: oklch(0.3353 0.0132 2.7676);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.3353 0.0132 2.7676);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.3353 0.0132 2.7676);
+  --primary: oklch(0.7357 0.1641 34.7091);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.9596 0.02 28.9029);
+  --secondary-foreground: oklch(0.5587 0.1294 32.7364);
+  --muted: oklch(0.9656 0.0176 39.4009);
+  --muted-foreground: oklch(0.5534 0.0116 58.0708);
+  --accent: oklch(0.8278 0.1131 57.9984);
+  --accent-foreground: oklch(0.3353 0.0132 2.7676);
+  --destructive: oklch(0.6122 0.2082 22.241);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.9296 0.037 38.6868);
+  --input: oklch(0.9296 0.037 38.6868);
+  --ring: oklch(0.7357 0.1641 34.7091);
+  --radius: 0.625rem;
+}
+
+html:has([data-cv-theme="elegant-luxury"]) {
+  --background: oklch(0.9779 0.0042 56.3756);
+  --foreground: oklch(0.2178 0 0);
+  --card: oklch(0.9779 0.0042 56.3756);
+  --card-foreground: oklch(0.2178 0 0);
+  --popover: oklch(0.9779 0.0042 56.3756);
+  --popover-foreground: oklch(0.2178 0 0);
+  --primary: oklch(0.465 0.147 24.9381);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.9625 0.0385 89.0943);
+  --secondary-foreground: oklch(0.4847 0.1022 75.1153);
+  --muted: oklch(0.9431 0.0068 53.4442);
+  --muted-foreground: oklch(0.4444 0.0096 73.639);
+  --accent: oklch(0.9619 0.058 95.6174);
+  --accent-foreground: oklch(0.3958 0.1331 25.723);
+  --destructive: oklch(0.4437 0.1613 26.8994);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.9355 0.0324 80.9937);
+  --input: oklch(0.9355 0.0324 80.9937);
+  --ring: oklch(0.465 0.147 24.9381);
+  --radius: 0.375rem;
 }
 
 @media print {

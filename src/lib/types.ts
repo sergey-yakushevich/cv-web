@@ -1,9 +1,3 @@
-import type { StaticImageData } from "next/image";
-
-export type ResumeIcon =
-  | React.ComponentType<React.SVGProps<SVGSVGElement>>
-  | StaticImageData;
-
 export type IconType = "github" | "linkedin" | "x" | "globe" | "mail" | "phone";
 
 export interface ResumeData {
@@ -13,6 +7,8 @@ export interface ResumeData {
   locationLink: string;
   about: string;
   headline: string;
+  /** Color theme id from src/lib/themes.ts. Absent means the default palette. */
+  theme?: string;
   summary: string | React.ReactNode;
   /** Optional image URL. Empty for most users; the initials show instead. */
   avatarUrl?: string;
@@ -53,63 +49,6 @@ export interface ResumeData {
   }>;
 }
 
-export interface GraphQLSocial {
-  name: string;
-  url: string;
-}
-
-export interface GraphQLContact {
-  email: string;
-  tel: string;
-  social: GraphQLSocial[];
-}
-
-export interface GraphQLEducation {
-  school: string;
-  degree: string;
-  start: string;
-  end: string;
-}
-
-export interface GraphQLWork {
-  company: string;
-  link: string;
-  badges: string[];
-  title: string;
-  start: string;
-  end: string;
-  description: string;
-}
-
-export interface GraphQLLink {
-  label: string;
-  href: string;
-}
-
-export interface GraphQLProject {
-  title: string;
-  techStack: string[];
-  description: string;
-  link?: GraphQLLink;
-}
-
-export interface GraphQLMe {
-  name: string;
-  initials: string;
-  location: string;
-  locationLink: string;
-  about: string;
-  summary: string;
-  /** Optional image URL. Empty for most users; the initials show instead. */
-  avatarUrl?: string;
-  personalWebsiteUrl: string;
-  contact: GraphQLContact;
-  education: GraphQLEducation[];
-  work: GraphQLWork[];
-  skills: string[];
-  projects: GraphQLProject[];
-}
-
 export function reactToString(content: React.ReactNode): string {
   if (typeof content === "string") return content;
   if (Array.isArray(content)) {
@@ -120,39 +59,4 @@ export function reactToString(content: React.ReactNode): string {
     if (children) return reactToString(children);
   }
   return "";
-}
-
-export function resumeDataToGraphQL(data: ResumeData): GraphQLMe {
-  return {
-    name: data.name,
-    initials: data.initials,
-    location: data.location,
-    locationLink: data.locationLink,
-    about: data.about,
-    summary: reactToString(data.summary),
-    avatarUrl: data.avatarUrl,
-    personalWebsiteUrl: data.personalWebsiteUrl,
-    contact: {
-      email: data.contact.email,
-      tel: data.contact.tel,
-      social: data.contact.social.map(({ name, url }) => ({ name, url })),
-    },
-    education: data.education,
-    work: data.work.map((job) => ({
-      company: job.company,
-      link: job.link,
-      badges: job.badges,
-      title: job.title,
-      start: job.start,
-      end: job.end || "Present",
-      description: job.description.join(" "),
-    })),
-    skills: data.skills,
-    projects: data.projects.map((project) => ({
-      title: project.title,
-      techStack: project.techStack,
-      description: project.description,
-      link: project.link,
-    })),
-  };
 }

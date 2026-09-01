@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/graphql"],
+        disallow: ["/api/"],
       },
     ],
     sitemap: "https://buildcv.cc/sitemap.xml",

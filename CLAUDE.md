@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Minimalist CV/Resume web application** built with Next.js 14, React, TypeScript, and Tailwind CSS. The app renders a clean, print-friendly CV layout with data configured in a single file.
+**buildcv** — a free, no-sign-up CV builder (Next.js 14, React, TypeScript, Tailwind CSS). Every visitor gets their own workspace of CVs, edits them in place on the page, and downloads a PDF rendered by headless Chrome from the same page.
 
 ## Commands
 
@@ -13,12 +13,9 @@ This is a **Minimalist CV/Resume web application** built with Next.js 14, React,
 pnpm dev          # Start development server on http://localhost:3000
 pnpm build        # Create production build
 pnpm start        # Start production server
+pnpm test         # Run the vitest suite (test/)
 pnpm lint         # Run Biome linting checks
-pnpm lint:fix     # Run Biome linting with auto-fix
-pnpm format       # Check code formatting with Biome
-pnpm format:fix   # Format code with Biome
-pnpm check        # Run both linting and formatting checks
-pnpm check:fix    # Run both linting and formatting with auto-fix
+pnpm check:fix    # Biome lint + format with auto-fix
 pnpm cv:import <userId>  # Load src/data CVs into one account (local only)
 ```
 
@@ -26,52 +23,42 @@ pnpm cv:import <userId>  # Load src/data CVs into one account (local only)
 ```bash
 docker compose build     # Build the container
 docker compose up -d     # Run the container
-docker compose down      # Stop the container
 ```
 
-**Note**: The project uses **Biome.js** for linting and formatting instead of ESLint and Prettier. Always run `pnpm check:fix` before committing to ensure code quality.
+**Note**: The project uses **Biome.js** for linting and formatting instead of ESLint and Prettier. Always run `pnpm check:fix` before committing, and `pnpm test` to run the suite.
 
 ## Architecture
 
 ### Project Structure
-- **`/src/app/`** - Next.js App Router pages and layouts
-- **`/src/components/`** - Reusable UI components (using shadcn/ui)
-- **`/src/data/resume-data.tsx`** - Single configuration file for all CV content
-- **`/src/apollo/`** - GraphQL server setup with resolvers and type definitions
-- **`/src/images/logos/`** - Company logo components
+- **`/src/app/`** - App Router pages, layout, API routes
+- **`/src/components/resume/`** - The CV renderer sections (Header, Summary, WorkExperience, Education, Skills)
+- **`/src/components/workspace/`** - Guides/edit-mode machinery: `use-page-guides` (page overlay + contenteditable), `dom-edit` (direct DOM edits)
+- **`/src/components/`** - Workspace shell, dialogs, command menu, shadcn/ui pieces
+- **`/src/lib/edit/`** - Pure edit logic: `collect-resume` (DOM → JSON), `set-by-path`, `page-boundaries` (pagination math). Covered by tests.
+- **`/src/lib/db/`** - SQLite access (`index.ts` connection + schema, `queries.ts` all reads/writes)
+- **`/src/lib/pdf/`** - PDF pipeline (`render-resume.ts` settings, `browser.ts` Chrome, `filename.ts`)
+- **`/test/`** - vitest suite (pure logic, DOM collection via happy-dom, db queries against a temp SQLite file)
 
 ### Key Technologies
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript with decorators enabled
-- **Styling**: Tailwind CSS with custom theme extensions
-- **UI Components**: shadcn/ui (Radix UI based)
-- **GraphQL**: Apollo Server with type-graphql at `/graphql` endpoint
-- **Command Palette**: cmdk library for keyboard navigation
-- **Print Optimization**: Custom print styles in global CSS
-
-### Important Files
-- **`src/data/resume-data.tsx`** - Main configuration file containing all CV data (personal info, work experience, education, skills, projects)
-- **`src/app/page.tsx`** - Main resume page component that renders the CV
-- **`src/app/layout.tsx`** - Root layout with metadata and analytics
-- **`src/components/command-menu.tsx`** - Keyboard shortcuts (Cmd+K) for navigation
-- **`src/components/print-drawer.tsx`** - Print functionality component
+- Next.js 14 App Router · TypeScript · Tailwind CSS 3 · shadcn/ui (Radix) · Biome · vitest · puppeteer-core · better-sqlite3
 
 ## Development Notes
 
 ### Adding New Sections
 CV content lives in the database, one JSON blob per CV. `src/lib/resume-json.ts` defines the editable shape; the renderer components read it directly.
 
-### GraphQL API
-The app exposes a GraphQL endpoint at `/graphql` that serves the resume data. This can be used to integrate the CV data with other applications.
+### Fonts and first paint
+
+The screen fonts are self-hosted variable WOFF2 files (`public/fonts`), declared in `globals.css` and **preloaded from the root layout** (`PRELOADED_FONTS`), so the first paint is already in the final fonts. `Inter Fallback` / `Source Serif Fallback` are metric-matched local fallbacks (size-adjust etc. computed with fontTools) so nothing shifts even when the swap happens. Do not add a route-level `loading.tsx` skeleton back — the page must render once, in its final style. If you replace a font file, recompute the fallback metrics.
 
 ### Print Optimization
-The app includes special print styles to ensure the CV looks good when printed. Test print functionality when making layout changes.
+The app includes special print styles (`@media print` in globals.css) to ensure the CV looks good when printed. Test print functionality when making layout changes.
 
 ### Users and storage
 
 No sign-up. The first visit mints a UUIDv7 into an httpOnly `cv_uid` cookie and
 creates a user with one starter CV. Data lives in SQLite (`better-sqlite3`),
-two tables, at `DATABASE_PATH` — a mounted volume in production.
+at `DATABASE_PATH` — a mounted volume in production.
 
 - **`src/lib/user.ts`** — reads the cookie, creates users. Cookies can only be
   *set* in a route handler, which is why `/api/session/start` exists; Next 14
@@ -83,11 +70,13 @@ two tables, at `DATABASE_PATH` — a mounted volume in production.
   ownership check to the write routes — that is the intended model.
 - Because the path is a credential it must not leak: keep the `noreferrer` on
   outbound links, the `strict-origin-when-cross-origin` policy, and the
-  `redactPath` call in `src/components/visit-tracker.tsx`.
+  `redactPath` call in `src/components/visit-tracker.tsx`. Structured data and
+  the OG image must never contain the real path either.
 
 Fingerprinting was rejected deliberately: 40–80% uniqueness means collisions,
 and a collision would show one person another's CV. Do not reintroduce it as an
-identity mechanism.
+identity mechanism. (FingerprintJS in the visit tracker is analytics grouping
+only — never identity.)
 
 New users are seeded with `src/data/default-cv.tsx` via
 `src/data/starter-template.ts` — a real CV, contact details included. Chosen
@@ -109,6 +98,17 @@ same page and the same `@media print` CSS.
   behind the proxy that resolved to `https://localhost:3000` and every render
   failed with `ERR_SSL_PROTOCOL_ERROR`.
 - Both Dockerfile stages are Alpine so the native module loads at runtime.
+- Printing swaps the variable fonts for static faces (`Inter Static`,
+  `Source Serif Static`): Chrome embeds a variable font instance as Type 3
+  subsets whose encodings collide and corrupt the PDF text layer.
+
+### Testing
+
+`pnpm test` runs vitest. The suite covers the pure logic (`lib/edit/*`,
+`validate-resume`, `resume-json`, `pdf/filename`), the DOM→JSON collection
+with happy-dom, and `lib/db/queries` against a real SQLite file in a temp dir
+(`DATABASE_PATH` is read at first import — set it before importing). The
+`server-only` package is aliased to a stub in `vitest.config.ts`.
 
 ### Deployment
 Kamal v2 to a shared VPS behind kamal-proxy, at buildcv.cc. See `config/deploy.yml`. The `cv_web_data` volume holds the SQLite file and must not be removed — it is the only copy of every user's CVs.

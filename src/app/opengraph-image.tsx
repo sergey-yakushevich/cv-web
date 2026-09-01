@@ -1,9 +1,13 @@
 import { ImageResponse } from "next/og";
-import { RESUME_DATA } from "../data/resumes";
 
+/*
+ * A neutral site card. This used to render one person's name, photo and about
+ * line — a leftover from when the site was a single CV. Every page shares this
+ * image, so it must not show anyone's data.
+ */
 export const runtime = "edge";
 
-export const alt = "Minimalist Resume";
+export const alt = "buildcv — Free CV Builder";
 export const size = {
   width: 1200,
   height: 630,
@@ -19,64 +23,39 @@ export default async function Image() {
         width: "100%",
         height: "100%",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: '"Inter"',
+        textAlign: "center",
+        fontFamily: "sans-serif",
       }}
     >
+      <div style={{ fontSize: 88, fontWeight: 700, color: "#333333" }}>
+        buildcv
+      </div>
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
+          fontSize: 32,
+          color: "#677184",
+          maxWidth: 760,
+          marginTop: 24,
+          lineHeight: 1.4,
         }}
       >
-        {/* biome-ignore lint/performance/noImgElement: ImageResponse context requires img element */}
-        <img
-          src={RESUME_DATA.avatarUrl}
-          alt={RESUME_DATA.name}
-          style={{
-            width: "150px",
-            height: "150px",
-            borderRadius: "10%",
-            marginBottom: "2rem",
-          }}
-        />
-        <div
-          style={{
-            fontSize: "3rem",
-            fontWeight: "bold",
-            color: "#333",
-            marginBottom: "1rem",
-          }}
-        >
-          {RESUME_DATA.name}
-        </div>
-        <div
-          style={{
-            fontSize: "1.5rem",
-            color: "#666",
-            maxWidth: "600px",
-            lineHeight: "1.4",
-          }}
-        >
-          {RESUME_DATA.about}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            marginTop: "2rem",
-            gap: "1rem",
-          }}
-        >
-          {RESUME_DATA.contact.email && (
-            <div style={{ fontSize: "1rem", color: "#666" }}>
-              {RESUME_DATA.personalWebsiteUrl}
-            </div>
-          )}
-        </div>
+        A free CV builder — no sign-up. Edit in place, keep versions, download a
+        PDF that résumé parsers can actually read.
+      </div>
+      <div
+        style={{
+          marginTop: 48,
+          fontSize: 24,
+          color: "#3280ff",
+          padding: "12px 32px",
+          border: "2px solid #3280ff",
+          borderRadius: 9999,
+        }}
+      >
+        buildcv.cc
       </div>
     </div>,
     {

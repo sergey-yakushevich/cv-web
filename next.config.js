@@ -5,7 +5,6 @@ const nextConfig = {
 
   // Optimize images
   images: {
-    domains: ['avatars.githubusercontent.com'],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
   },
@@ -62,6 +61,17 @@ const nextConfig = {
       },
       {
         source: '/(.*).png',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      },
+      {
+        // The fonts are preloaded on every page; a revalidation round-trip
+        // per visit would waste exactly the head start the preload buys.
+        source: '/fonts/:path*',
         headers: [
           {
             key: 'Cache-Control',
