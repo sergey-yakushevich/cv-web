@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { preload } from "react-dom";
 import { ResumeView } from "@/components/resume-view";
 import { WelcomeDialog } from "@/components/shadcn-space/dialog/dialog-07";
 import { getCounter, getCv, listCvs } from "@/lib/db/queries";
+import { themeFontPreloads } from "@/lib/theme-fonts";
 
 // Reads per-user rows, so there is nothing to pre-render.
 export const dynamic = "force-dynamic";
@@ -41,6 +43,19 @@ export default function CvPage({ params }: PageProps) {
 
   if (!cv) {
     notFound();
+  }
+
+  // The theme's own typefaces, fetched from the first bytes of the response
+  // for the same reason the layout preloads Inter: the first paint should
+  // already be in the final fonts. Only this page knows the CV's theme, so
+  // the per-theme preloads live here rather than in the layout.
+  for (const href of themeFontPreloads(cv.data.theme)) {
+    preload(href, {
+      as: "font",
+      type: "font/woff2",
+      crossOrigin: "anonymous",
+      fetchPriority: "high",
+    });
   }
 
   // Set by /api/session/start when it mints a brand-new user; the dialog

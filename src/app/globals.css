@@ -259,6 +259,170 @@
   font-style: normal;
 }
 
+/*
+ * Per-theme typefaces, the ones tweakcn's registry names for each preset.
+ * Static instances only, on purpose: a static face is safe on screen and in
+ * the PDF alike (no Type 3 subset problem — see the note in @media print),
+ * so the same file serves both and no print-time swap is needed for them.
+ * Latin subsets from Google Fonts; all are OFL.
+ *
+ * Gelasio stands in for graphite's Georgia: it is metric-compatible with
+ * Georgia by design, and the render container has no Georgia to fall back
+ * to — without it the PDF would silently print in DejaVu.
+ */
+@font-face {
+  font-family: "Montserrat";
+  src: url("/fonts/Montserrat/400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("/fonts/Montserrat/500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("/fonts/Montserrat/600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("/fonts/Montserrat/700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Merriweather";
+  src: url("/fonts/Merriweather/400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Merriweather";
+  src: url("/fonts/Merriweather/700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("/fonts/Poppins/400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("/fonts/Poppins/500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("/fonts/Poppins/600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("/fonts/Poppins/700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/fonts/Libre_Baskerville/400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/fonts/Libre_Baskerville/700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/fonts/Libre_Baskerville/400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/Geist_Mono/400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/Geist_Mono/500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/Geist_Mono/600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/Geist_Mono/700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gelasio";
+  src: url("/fonts/Gelasio/400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gelasio";
+  src: url("/fonts/Gelasio/600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gelasio";
+  src: url("/fonts/Gelasio/700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gelasio";
+  src: url("/fonts/Gelasio/400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -445,7 +609,10 @@
 /*
  * CV themes — the light presets from tweakcn (graphite, mono, sunset-horizon,
  * elegant-luxury), exactly as their registry publishes them, trimmed to the
- * tokens this app uses. Colors only: the fonts stay ours.
+ * tokens this app uses. Colors and typefaces both: each block sets the fonts
+ * its registry entry names, from the static faces declared above. A theme
+ * that keeps a default font simply omits the var — graphite stays on Inter
+ * for sans, so it also inherits the print-time Inter Static swap.
  *
  * The server renders data-cv-theme on the workspace <main>, and :has() lifts
  * the override to the root, so the whole page — portals, dialogs, toolbar —
@@ -457,6 +624,8 @@
  * base, so no selector arms race with :root is possible.
  */
 html:has([data-cv-theme="graphite"]) {
+  /* Registry says Georgia; Gelasio is its metric-compatible stand-in. */
+  --font-serif: Gelasio, Georgia, "Source Serif Fallback", serif;
   --background: oklch(0.9551 0 0);
   --foreground: oklch(0.3211 0 0);
   --card: oklch(0.9702 0 0);
@@ -480,6 +649,10 @@ html:has([data-cv-theme="graphite"]) {
 }
 
 html:has([data-cv-theme="mono"]) {
+  /* The whole page in one monospaced voice — that is the theme. */
+  --font-sans: "Geist Mono", "JetBrains Mono", monospace;
+  --font-serif: "Geist Mono", "JetBrains Mono", monospace;
+  --font-mono: "Geist Mono", "JetBrains Mono", monospace;
   --background: oklch(1 0 0);
   --foreground: oklch(0.1448 0 0);
   --card: oklch(1 0 0);
@@ -503,6 +676,8 @@ html:has([data-cv-theme="mono"]) {
 }
 
 html:has([data-cv-theme="sunset-horizon"]) {
+  --font-sans: Montserrat, "Inter Fallback", sans-serif;
+  --font-serif: Merriweather, Georgia, "Source Serif Fallback", serif;
   --background: oklch(0.9856 0.0084 56.3169);
   --foreground: oklch(0.3353 0.0132 2.7676);
   --card: oklch(1 0 0);
@@ -526,6 +701,8 @@ html:has([data-cv-theme="sunset-horizon"]) {
 }
 
 html:has([data-cv-theme="elegant-luxury"]) {
+  --font-sans: Poppins, "Inter Fallback", sans-serif;
+  --font-serif: "Libre Baskerville", Georgia, "Source Serif Fallback", serif;
   --background: oklch(0.9779 0.0042 56.3756);
   --foreground: oklch(0.2178 0 0);
   --card: oklch(0.9779 0.0042 56.3756);
@@ -579,6 +756,10 @@ html:has([data-cv-theme="elegant-luxury"]) {
    *
    * The static faces embed as normal TrueType with one encoding, and they are
    * the same typeface, so nothing about the printed page changes visually.
+   *
+   * Theme typefaces need no swap: they are static files to begin with, and
+   * the html:has([data-cv-theme]) blocks outrank this :root rule (0,1,1 vs
+   * 0,1,0), so a themed CV prints in its own fonts untouched.
    */
   :root {
     --font-sans: "Inter Static", Arial, Helvetica, sans-serif;
