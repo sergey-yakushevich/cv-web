@@ -115,7 +115,10 @@ function WorkExperienceItem({ work, index }: WorkExperienceItemProps) {
   const prefix = `work.${index}`;
 
   return (
-    <Card className="py-1 print-avoid-break">
+    // bg-transparent: the CV is one flat sheet — under a theme where --card
+    // differs from --background the card box would read as a mismatched
+    // block on the page (and in the PDF).
+    <Card className="bg-transparent py-1 print-avoid-break">
       {" "}
       <CardHeader>
         {" "}

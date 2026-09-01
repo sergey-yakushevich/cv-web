@@ -35,7 +35,9 @@ function EducationItem({ education, index }: EducationItemProps) {
   const prefix = `education.${index}`;
 
   return (
-    <Card className="print-avoid-break">
+    // bg-transparent for the same reason as WorkExperience: no card box on
+    // the flat CV sheet when a theme separates --card from --background.
+    <Card className="bg-transparent print-avoid-break">
       <CardHeader>
         <div className="flex items-center justify-between gap-x-2 text-base">
           <h3

@@ -269,7 +269,7 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
           className={`avatar-overlay pointer-events-none absolute inset-0 hidden flex-col items-center justify-center gap-1.5 border-2 border-dashed bg-background text-secondary-foreground ${
             RESUME_DATA.avatarUrl ? "rounded-xl" : "rounded-full"
           }`}
-          style={{ borderColor: "hsl(var(--guide-line))" }}
+          style={{ borderColor: "var(--guide-line)" }}
         >
           <div className="flex size-9 items-center justify-center rounded-md border-[1.5px] border-dashed border-muted-foreground/40 text-muted-foreground">
             <ImagePlusIcon className="size-4" aria-hidden="true" />

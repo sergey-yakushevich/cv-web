@@ -335,7 +335,7 @@ export function ResumeWorkspace({
                   height: page.height,
                   left: -pageMarginX,
                   right: -pageMarginX,
-                  borderColor: "hsl(var(--guide-line))",
+                  borderColor: "var(--guide-line)",
                 }}
               >
                 {index > 0 && (
