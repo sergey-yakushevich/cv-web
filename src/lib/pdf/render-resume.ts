@@ -8,6 +8,14 @@ interface RenderOptions {
   origin: string;
 }
 
+/*
+ * ?print=1 asks the page's server render to run the CV through the
+ * watermark-removal step (strip-watermarks.ts) before it is printed, so the
+ * PDF's text layer carries none of the invisible characters or statistical
+ * marks the cleaner strips. Without the flag the page renders exactly what is
+ * stored, so downloads are the only flow that cleans.
+ */
+
 /**
  * The only place that knows how to turn a CV page into a PDF.
  *
@@ -40,7 +48,7 @@ export async function renderResumePdf({
     // of the CV from before you last edited resume-data. Always refetch.
     await page.setCacheEnabled(false);
 
-    const response = await page.goto(`${origin}/${path}`, {
+    const response = await page.goto(`${origin}/${path}?print=1`, {
       waitUntil: "networkidle0",
       timeout: 60_000,
     });

@@ -4,7 +4,11 @@ import { notFound } from "next/navigation";
 import { preload } from "react-dom";
 import { ResumeView } from "@/components/resume-view";
 import { WelcomeDialog } from "@/components/shadcn-space/dialog/dialog-07";
-import { getCounter, getCv, listCvs } from "@/lib/db/queries";
+import { type CvRow, getCounter, getCv, listCvs } from "@/lib/db/queries";
+import {
+  stripWatermarks,
+  summarizeWatermarksReport,
+} from "@/lib/pdf/strip-watermarks";
 import { themeFontPreloads } from "@/lib/theme-fonts";
 
 // Reads per-user rows, so there is nothing to pre-render.
@@ -12,6 +16,14 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: { userId: string; cvSlug: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+/** The ?print=1 body: clean the CV for the PDF, leaving a server-log trace. */
+async function stripForPrint(cv: CvRow): Promise<CvRow> {
+  const { data, report } = await stripWatermarks(cv.data);
+  console.info(`[watermarks] ${summarizeWatermarksReport(report)}`);
+  return { ...cv, data };
 }
 
 export function generateMetadata({ params }: PageProps): Metadata {
@@ -38,18 +50,28 @@ export function generateMetadata({ params }: PageProps): Metadata {
  * permission. The cookie only remembers which workspace to send a returning
  * visitor back to.
  */
-export default function CvPage({ params }: PageProps) {
+export default async function CvPage({ params, searchParams }: PageProps) {
   const cv = getCv(params.userId, params.cvSlug);
 
   if (!cv) {
     notFound();
   }
 
+  /*
+   * ?print=1 is set by the PDF render (render-resume.ts), and turns this
+   * server render into the final step of resume generation: the CV is run
+   * through the watermark-removal layers before Chrome prints it, so the
+   * downloaded file carries no AI provenance marks. Screen views never set
+   * the flag, so what a visitor sees on screen is exactly what is stored —
+   * the stored data itself is never modified by a download.
+   */
+  const renderCv = searchParams?.print === "1" ? await stripForPrint(cv) : cv;
+
   // The theme's own typefaces, fetched from the first bytes of the response
   // for the same reason the layout preloads Inter: the first paint should
   // already be in the final fonts. Only this page knows the CV's theme, so
   // the per-theme preloads live here rather than in the layout.
-  for (const href of themeFontPreloads(cv.data.theme)) {
+  for (const href of themeFontPreloads(renderCv.data.theme)) {
     preload(href, {
       as: "font",
       type: "font/woff2",
@@ -64,7 +86,11 @@ export default function CvPage({ params }: PageProps) {
 
   return (
     <>
-      <ResumeView cv={cv} cvs={listCvs(params.userId)} userId={params.userId} />
+      <ResumeView
+        cv={renderCv}
+        cvs={listCvs(params.userId)}
+        userId={params.userId}
+      />
       {showWelcome && (
         <WelcomeDialog resumesGenerated={getCounter("resumes_generated")} />
       )}

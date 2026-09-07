@@ -43,6 +43,10 @@ next-env.d.ts
 # kamal secrets (resolved at deploy time)
 .kamal/secrets
 
+# python bytecode (vendor/watermarks-remover builds __pycache__/ on first import)
+__pycache__/
+*.pyc
+
 # local sqlite database
 /.data/
 .kamal/trackhub_token

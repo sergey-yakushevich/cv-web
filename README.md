@@ -32,6 +32,7 @@ actions:
 - 🖨 **The PDF is the web page** — printed by headless Chrome from the same URL and the same `@media print` CSS, not a separate document and not a screenshot. What you see is what the recruiter's parser gets.
 - 🔗 **No sign-up, no accounts** — the first visit mints a UUIDv7 into an httpOnly cookie and creates a workspace. The unguessable URL is the whole permission model: anyone holding a link can read and edit that CV.
 - 📚 **Unlimited versions** — keep one CV per job target; each is served at its own URL and prints to its own PDF.
+- 🔅 **Watermark-free downloads** — the final step of PDF generation runs the CV through Layers A and B of [watermarks-remover](vendor/watermarks-remover), stripping invisible Unicode, exotic spaces, bidi overrides and tag characters from every field, so pasted AI text cannot smuggle provenance marks into the file a recruiter receives.
 - 🔤 **A text layer that survives résumé parsers** — printing swaps variable fonts for pinned static faces, because Chrome embeds variable instances as Type 3 subsets that corrupt the PDF text layer. A test fails on any font file that regresses this.
 - 🎨 **Themed pages, edge to edge** — Chrome clips all paint to inside the `@page` margins, so themed margins are painted into the PDF afterwards with pdf-lib.
 - 🌱 **A worked example, not a skeleton** — new workspaces are seeded with a real, finished CV: achievement bullets with numbers, a headline stating the target title, badges per role.
@@ -139,6 +140,35 @@ Chrome honouring the page-break rules.
 
 `puppeteer-core` drives an already-installed Chrome rather than downloading its
 own, so the output matches what `CMD+P` produces on the same machine.
+
+### Watermark-free downloads
+
+The render asks for the page with `?print=1`, which turns the page's server
+render into the final step of resume generation: `strip-watermarks.ts` runs the
+CV through the vendored
+[watermarks-remover](https://github.com/guillaumemeyer/watermarks-remover)
+scripts (MIT, stdlib-only Python) as one `python3` process —
+
+| Layer | What it strips | When it runs |
+|---|---|---|
+| **A** | Invisible Unicode, exotic spaces, bidi overrides, tag characters — the classic copy-paste provenance marks of AI assistants | every download, deterministically |
+| **B** | Statistical (token-sampling) watermarks, rewritten out of the prose fields | only when an LLM rewrite backend is configured (see below) |
+
+Layer B is optional exactly as upstream ships it: with no backend configured
+the step records `skipped` and the download proceeds. To enable it, point the
+server at an Ollama or OpenAI-compatible endpoint:
+
+```bash
+WATERMARKS_REWRITE_BACKEND=ollama
+WATERMARKS_REWRITE_MODEL=llama3.2        # any model the backend serves
+# WATERMARKS_REWRITE_BASE_URL=http://127.0.0.1:11434   (default for ollama)
+# WATERMARKS_REWRITE_API_KEY=…            (required for openai-compatible)
+```
+
+The whole step is fail-soft and non-destructive: a missing `python3`, an absent
+script, a timeout or a backend error leaves the CV unchanged and the download
+working, and the database is never touched — only the render sees the cleaned
+copy. Each print leaves one line in the server log saying what the step did.
 
 ## Storage
 

@@ -60,7 +60,13 @@ RUN apk add --no-cache \
       freetype \
       harfbuzz \
       ca-certificates \
-      font-liberation
+      font-liberation \
+      python3
+
+# The vendored watermarks-remover scripts — the final step of the PDF
+# pipeline. stdlib-only Python, so python3 alone is enough (Layer B's
+# optional LLM backends are env-configured, never installed here).
+COPY --from=build /app/vendor ./vendor
 
 # Read by src/lib/pdf/browser.ts. Alpine has moved this binary between
 # releases, so setting it beats relying on the path search.

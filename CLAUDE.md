@@ -109,6 +109,17 @@ same page and the same `@media print` CSS.
 - Printing swaps the variable fonts for static faces (`Inter Static`,
   `Source Serif Static`): Chrome embeds a variable font instance as Type 3
   subsets whose encodings collide and corrupt the PDF text layer.
+- **The final step of the pipeline is watermark removal.** `render-resume.ts`
+  prints the page with `?print=1`, and that page render runs the CV through
+  `src/lib/pdf/strip-watermarks.ts` → the vendored
+  `vendor/watermarks-remover/` scripts (Layers A and B). Layer A strips
+  invisible Unicode deterministically on every download; Layer B rewrites the
+  prose fields but only when `WATERMARKS_REWRITE_*` points at an LLM backend —
+  otherwise it is skipped, exactly as upstream ships it. The step is fail-soft
+  (missing python3 / timeout → original data, download still works) and
+  non-destructive (the stored CV is never modified). Do not clean at
+  save-time instead: a download must always be clean, including CVs saved
+  before the step existed.
 
 ### Testing
 
