@@ -4,9 +4,10 @@
  * Visitor + action tracking for the CV SPA.
  *
  * Page views, dwell time and engagement are no longer implemented here. They
- * come from the shared trackhub tracker (served at /trk/t.js), which every site
- * now loads — four hand-maintained copies had already drifted apart, and that
- * drift is what silently dropped this app's client context for every visitor.
+ * come from the shared trackhub tracker (served at track.cyberjosef.dev/t.js),
+ * which every site now loads — four hand-maintained copies had already drifted
+ * apart, and that drift is what silently dropped this app's client context for
+ * every visitor.
  *
  * What stays here is the part that is genuinely specific to buildcv: it is a
  * single-page editor, so after the first load the user barely changes URL and
@@ -26,7 +27,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 const TRACKER_SRC =
-  process.env.NEXT_PUBLIC_TRACKHUB_SCRIPT ?? "https://cyberjosef.dev/trk/t.js";
+  process.env.NEXT_PUBLIC_TRACKHUB_SCRIPT ?? "https://track.cyberjosef.dev/t.js";
 
 type TrackhubAPI = {
   __loaded?: boolean;
