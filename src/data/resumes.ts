@@ -1,7 +1,10 @@
 import type { ResumeData } from "@/lib/types";
 import { RESUME_DATA as defaultCv } from "./default-cv";
+import { RESUME_DATA as enBatumi } from "./en-batumi";
 import { RESUME_DATA as enBatumi10yGo } from "./en-batumi-10y-go";
 import { RESUME_DATA as enBatumi10yPayments } from "./en-batumi-10y-payments";
+import { RESUME_DATA as enMinsk } from "./en-minsk";
+import { RESUME_DATA as enWarsaw } from "./en-warsaw";
 
 export interface ResumeVariant {
   slug: string;
@@ -21,6 +24,36 @@ export interface ResumeVariant {
 }
 
 export const RESUME_VARIANTS: ResumeVariant[] = [
+  {
+    slug: "en-batumi",
+    label: "EN / Batumi",
+    lang: "en",
+    locale: "en_US",
+    location: "Batumi, Georgia",
+    experience: "10 years",
+    note: "The copy actually being sent. Worldwide, EMEA and unspecified-remote roles. Its website link carries the trackhub code ns9y, so an open shows up at track.cyberjosef.dev/tracks as this résumé rather than as anonymous traffic. Identical to the Warsaw copy but for the city line.",
+    data: enBatumi,
+  },
+  {
+    slug: "en-warsaw",
+    label: "EN / Warsaw",
+    lang: "en",
+    locale: "en_US",
+    location: "Warsaw, Poland",
+    experience: "10 years",
+    note: "For EU-restricted postings — 'remote anywhere in the EU', per-country EU entities — where the Polish permit is what matters. Same document as the Batumi copy with the city line changed; its trackhub code is np2w.",
+    data: enWarsaw,
+  },
+  {
+    slug: "en-minsk",
+    label: "EN / Minsk",
+    lang: "en",
+    locale: "en_US",
+    location: "Minsk, Belarus",
+    experience: "8 years",
+    note: "The Belarusian identity, under the local spelling of the name, with its own photo and a shorter history (8 years, iTransition from 2018). Trackhub code 6ztw.",
+    data: enMinsk,
+  },
   {
     slug: "en-batumi-10y-go",
     label: "EN / Batumi / 10y / Go",
