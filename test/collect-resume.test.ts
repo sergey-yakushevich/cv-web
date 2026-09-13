@@ -169,3 +169,59 @@ describe("collectResumeFromDom", () => {
     expect(out.avatarUrl).toBe("data:image/png;a");
   });
 });
+
+/*
+ * A tracked URL is the one case where the shown text is lossy: the `?t=` code
+ * lives in the href and never appears in the contact line. Saving an untouched
+ * CV must not rewrite the stored URL down to the address it prints.
+ */
+describe("tracked links survive the round trip", () => {
+  const trackedJson = () =>
+    JSON.stringify({
+      name: "Ada",
+      contact: {
+        email: "ada@example.com",
+        tel: "+1",
+        social: [
+          { name: "GitHub", url: "https://github.com/ada", icon: "github" },
+          {
+            name: "Site",
+            url: "https://cyberjosef.dev/?t=ns9y",
+            icon: "globe",
+          },
+        ],
+      },
+      work: [],
+      education: [],
+    });
+
+  const markup = (shown: string) => `
+    <span data-edit-path="contact.email">ada@example.com</span>
+    <span data-edit-path="contact.tel">+1</span>
+    <span data-edit-path="contact.social.0.url" data-edit-format="url">github.com/ada</span>
+    <span data-edit-path="contact.social.1.url" data-edit-format="url">${shown}</span>
+  `;
+
+  it("keeps the code when the line reads as it was rendered", () => {
+    root.innerHTML = markup("cyberjosef.dev");
+    const out = collectResumeFromDom(root, trackedJson(), null);
+
+    expect(out.contact.social[1].url).toBe("https://cyberjosef.dev/?t=ns9y");
+  });
+
+  it("drops the code when the address itself was edited", () => {
+    // Editing the domain is a real change: the new text is the new URL, and
+    // carrying the old code over would attribute a different link.
+    root.innerHTML = markup("ada.dev");
+    const out = collectResumeFromDom(root, trackedJson(), null);
+
+    expect(out.contact.social[1].url).toBe("https://ada.dev");
+  });
+
+  it("still adds the scheme to an untracked link", () => {
+    root.innerHTML = markup("cyberjosef.dev");
+    const out = collectResumeFromDom(root, trackedJson(), null);
+
+    expect(out.contact.social[0].url).toBe("https://github.com/ada");
+  });
+});

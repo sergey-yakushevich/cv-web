@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import type { ResumeData } from "@/lib/types";
+import { displayUrl } from "@/lib/url-display";
 
 interface LocationLinkProps {
   location: ResumeData["location"];
@@ -84,15 +85,16 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
   const githubSocial = RESUME_DATA.contact.social[githubIndex];
   const linkedinSocial = RESUME_DATA.contact.social[linkedinIndex];
 
-  const bareUrl = (url: string) =>
-    url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-
   /*
    * The contact line always prints literal values: the full email address, the
    * phone number, and bare URLs. Anchor text like "Email" or "GitHub" reads
    * fine on screen but is what actually reaches a résumé parser, because
    * parsers read the PDF text layer and drop the link annotations behind it —
    * so "Email" extracts as the word "Email" and the address is lost.
+   *
+   * `displayUrl` is that same rule with one exception: a tracking parameter is
+   * not part of the address, so it stays in the href and out of the text. The
+   * href is still the stored URL, code and all.
    */
   const mainContactLineLinks: {
     href: string;
@@ -105,7 +107,7 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
   if (websiteSocial) {
     mainContactLineLinks.push({
       href: websiteSocial.url,
-      text: bareUrl(websiteSocial.url),
+      text: displayUrl(websiteSocial.url),
       icon: GlobeIcon,
       editPath: `contact.social.${websiteIndex}.url`,
       editFormat: "url",
@@ -133,7 +135,7 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
   if (githubSocial) {
     mainContactLineLinks.push({
       href: githubSocial.url,
-      text: bareUrl(githubSocial.url),
+      text: displayUrl(githubSocial.url),
       icon: GithubIcon,
       editPath: `contact.social.${githubIndex}.url`,
       editFormat: "url",
@@ -143,7 +145,7 @@ export function Header({ data: RESUME_DATA }: HeaderProps) {
   if (linkedinSocial) {
     mainContactLineLinks.push({
       href: linkedinSocial.url,
-      text: bareUrl(linkedinSocial.url),
+      text: displayUrl(linkedinSocial.url),
       icon: LinkedinIcon,
       editPath: `contact.social.${linkedinIndex}.url`,
       editFormat: "url",

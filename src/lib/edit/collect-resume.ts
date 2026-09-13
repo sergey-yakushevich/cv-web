@@ -1,4 +1,15 @@
+import { displaysAs } from "../url-display";
 import { setByPath } from "./set-by-path";
+
+/** Reads the value at a dot path, the counterpart to `setByPath`. */
+function getByPath(target: unknown, path: string): unknown {
+  let node: unknown = target;
+  for (const key of path.split(".")) {
+    if (node == null || typeof node !== "object") return undefined;
+    node = (node as Record<string, unknown>)[key];
+  }
+  return node;
+}
 
 /**
  * Collects every edited element back into the CV JSON. The DOM is the form:
@@ -22,7 +33,10 @@ export function collectResumeFromDom(
    * controls), so the arrays must be grown to cover every original index
    * present before the indexed paths below can land in them.
    */
-  const grow = (kind: "work" | "education", blank: () => unknown) => {
+  const grow = (
+    kind: "work" | "education" | "certificates",
+    blank: () => unknown
+  ) => {
     const arr = parsed[kind];
     if (!Array.isArray(arr)) return;
     for (const el of root.querySelectorAll<HTMLElement>(
@@ -42,6 +56,7 @@ export function collectResumeFromDom(
     description: [],
   }));
   grow("education", () => ({ school: "", degree: "", start: "", end: "" }));
+  grow("certificates", () => ({ school: "", degree: "", start: "", end: "" }));
 
   for (const el of root.querySelectorAll<HTMLElement>("[data-edit-path]")) {
     const path = el.dataset.editPath;
@@ -52,9 +67,23 @@ export function collectResumeFromDom(
       .trim();
 
     const format = el.dataset.editFormat;
-    // Link text is shown bare (github.com/...); stored with a scheme.
-    if (format === "url" && value && !/^https?:\/\//i.test(value)) {
-      value = `https://${value}`;
+    /*
+     * Link text is shown bare (github.com/...); stored with a scheme.
+     *
+     * The shown text is also lossy: a tracking parameter lives in the href and
+     * never appears in the line. So when the text still reads exactly as the
+     * stored URL displays, the stored URL is kept verbatim — otherwise the
+     * first save of an untouched CV would quietly rewrite a tracked link down
+     * to the address it prints and drop the code. Text that genuinely changed
+     * wins, because then the address itself was edited.
+     */
+    if (format === "url" && value) {
+      const stored = getByPath(parsed, path);
+      if (typeof stored === "string" && displaysAs(value, stored)) {
+        value = stored;
+      } else if (!/^https?:\/\//i.test(value)) {
+        value = `https://${value}`;
+      }
     }
     // An open-ended job renders as "Present" but is stored as null.
     if (format === "present") {
@@ -117,7 +146,7 @@ export function collectResumeFromDom(
    * on-screen order, keyed by the original index each article carries — a
    * deleted entry simply is not in the list any more.
    */
-  for (const kind of ["work", "education"] as const) {
+  for (const kind of ["work", "education", "certificates"] as const) {
     const arr = parsed[kind];
     if (!Array.isArray(arr)) continue;
     parsed[kind] = Array.from(

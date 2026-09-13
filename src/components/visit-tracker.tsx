@@ -27,7 +27,8 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 const TRACKER_SRC =
-  process.env.NEXT_PUBLIC_TRACKHUB_SCRIPT ?? "https://track.cyberjosef.dev/t.js";
+  process.env.NEXT_PUBLIC_TRACKHUB_SCRIPT ??
+  "https://track.cyberjosef.dev/t.js";
 
 type TrackhubAPI = {
   __loaded?: boolean;
