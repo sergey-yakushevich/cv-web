@@ -15,7 +15,7 @@ image: sergey-yakushevich/cv-web
 
 servers:
   web:
-    - 213.134.31.142
+    - 145.63.140.51
 
 proxy:
   ssl: true
